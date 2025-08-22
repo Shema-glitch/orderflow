@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import type { AppView, Order, Shift, OrderItem, Sale } from '@/lib/types';
+import type { AppView, Order, Shift, Sale } from '@/lib/types';
 import { menu } from '@/lib/menu-data';
 import ShiftScreen from '@/components/screens/shift-screen';
 import NewOrderScreen from '@/components/screens/new-order-screen';
@@ -12,10 +12,13 @@ import AllOrdersScreen from '@/components/screens/all-orders-screen';
 import SalesScreen from '@/components/screens/sales-screen';
 import BottomNav from '@/components/bottom-nav';
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Info, X, Sun, Moon } from 'lucide-react';
+import { Loader2, Plus, Info, X, Sun, Moon, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ShiftSummaryScreen from '@/components/screens/shift-summary-screen';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction } from '@/components/ui/alert-dialog';
+import { useAuth, signInWithGoogle, signOutUser } from '@/lib/auth';
+import type { User } from 'firebase/auth';
+import LoginScreen from '@/components/screens/login-screen';
 
 
 export default function Home() {
@@ -27,6 +30,7 @@ export default function Home() {
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const [theme, setTheme] = useState('light');
+  const user = useAuth();
 
   useEffect(() => {
     // On mount, set theme from localStorage or system preference
@@ -53,8 +57,10 @@ export default function Home() {
   };
 
   useEffect(() => {
-    setView(shift.isOpen ? 'orders_list' : 'shift_closed');
-  }, [shift.isOpen]);
+    if (user !== null) { // Only set view if user is determined
+      setView(shift.isOpen ? 'orders_list' : 'shift_closed');
+    }
+  }, [shift.isOpen, user]);
 
   const handleOpenShift = () => {
     setShift({ isOpen: true, startTimestamp: new Date().toISOString() });
@@ -139,6 +145,10 @@ export default function Home() {
   };
   
   const renderView = () => {
+    if (user === null) {
+      return <LoginScreen onSignIn={signInWithGoogle} />;
+    }
+
     if (view === 'loading') {
       return (
         <div className="flex h-screen w-full items-center justify-center">
@@ -190,7 +200,7 @@ export default function Home() {
        <header className="w-full max-w-md mx-auto p-4 flex justify-between items-center bg-card shadow-sm z-50">
         <div>
           <h1 className="text-xl font-bold text-primary">OrderFlow Lite</h1>
-          <p className="text-xs text-muted-foreground">Current Shift</p>
+          {user && <p className="text-xs text-muted-foreground">Current Shift</p>}
         </div>
         <div className="flex items-center">
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
@@ -198,9 +208,16 @@ export default function Home() {
             <Moon className="absolute h-5 w-5 scale-0 rotate-90 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setIsAboutDialogOpen(true)}>
-            <Info className="h-5 w-5"/>
-          </Button>
+          {user && (
+            <>
+              <Button variant="ghost" size="icon" onClick={() => setIsAboutDialogOpen(true)}>
+                <Info className="h-5 w-5"/>
+              </Button>
+              <Button variant="ghost" size="icon" onClick={signOutUser}>
+                <LogOut className="h-5 w-5"/>
+              </Button>
+            </>
+          )}
         </div>
       </header>
 
@@ -212,7 +229,7 @@ export default function Home() {
       
       {showNewEntry && renderNewEntryScreen()}
 
-      {shift.isOpen && !showNewEntry && (
+      {user && shift.isOpen && !showNewEntry && (
         <>
           <BottomNav activeView={view as AppView} setView={setView} />
           <Button
