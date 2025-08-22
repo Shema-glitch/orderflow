@@ -1,47 +1,28 @@
+
 "use client";
 
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, StopCircle } from "lucide-react";
+import { PlayCircle } from "lucide-react";
 
 interface ShiftScreenProps {
-  isShiftOpen: boolean;
   onOpenShift: () => void;
-  onCloseShift: () => void;
 }
 
-export default function ShiftScreen({ isShiftOpen, onOpenShift, onCloseShift }: ShiftScreenProps) {
+export default function ShiftScreen({ onOpenShift }: ShiftScreenProps) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Card className="w-full max-w-md shadow-xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold font-headline">OrderFlow Lite</CardTitle>
-            <CardDescription className="text-md">
-              Manage your work shift and start taking orders.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col space-y-4 p-6">
-            <Button
-              size="lg"
-              onClick={onOpenShift}
-              disabled={isShiftOpen}
-              className="w-full py-6 text-lg"
-            >
-              <PlayCircle className="mr-2 h-6 w-6" />
-              Open Shift
-            </Button>
-            <Button
-              size="lg"
-              variant="destructive"
-              onClick={onCloseShift}
-              disabled={!isShiftOpen}
-              className="w-full py-6 text-lg"
-            >
-              <StopCircle className="mr-2 h-6 w-6" />
-              Close Shift
-            </Button>
-          </CardContent>
-        </Card>
+    <div className="flex flex-col items-center justify-center h-[80vh] text-center">
+      <div className="mb-8">
+        <h1 className="text-5xl font-bold font-headline text-primary">OrderFlow</h1>
+        <p className="text-muted-foreground mt-2">Your personal shift assistant.</p>
+      </div>
+      <Button
+        size="lg"
+        onClick={onOpenShift}
+        className="w-full max-w-xs py-8 text-2xl rounded-full shadow-lg bg-primary hover:bg-primary/90"
+      >
+        <PlayCircle className="mr-4 h-8 w-8" />
+        Open Shift
+      </Button>
     </div>
   );
 }

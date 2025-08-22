@@ -1,3 +1,4 @@
+
 export interface OrderItemSelection {
   [subcategoryName: string]: string;
 }
@@ -15,7 +16,7 @@ export interface Order {
 }
 
 export interface Subcategory {
-  id: string;
+  id:string;
   name: string;
   items: string[];
 }
@@ -35,4 +36,12 @@ export interface Shift {
     startTimestamp: string | null;
 }
 
-export type AppView = 'shift' | 'new_order' | 'orders_list';
+export interface Sale {
+  id: string;
+  timestamp: string;
+  name: string;
+  quantity: number;
+  price?: number;
+}
+
+export type AppView = 'shift' | 'new_order' | 'orders_list' | 'sales';

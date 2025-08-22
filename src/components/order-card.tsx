@@ -1,10 +1,10 @@
+
 "use client";
 
 import type { Order } from '@/lib/types';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { CheckCircle2, Circle } from 'lucide-react';
 
 interface OrderCardProps {
   order: Order;
@@ -12,56 +12,42 @@ interface OrderCardProps {
 }
 
 export default function OrderCard({ order, onMarkAsCharged }: OrderCardProps) {
+    if (!order.items) {
+      return null;
+    }
+
   const formattedTime = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  // Defensive check in case an order somehow gets created without items.
-  if (!order.items) {
-    return (
-        <Card className="w-full shadow-md hover:shadow-lg transition-shadow duration-300">
-            <CardHeader>
-                <CardTitle className="text-lg font-bold">Invalid Order</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-muted-foreground">This order data is corrupted or incomplete.</p>
-            </CardContent>
-        </Card>
-    )
-  }
-
   return (
-    <Card className="w-full shadow-md hover:shadow-lg transition-shadow duration-300">
-      <CardHeader className="flex flex-row items-start justify-between pb-2">
-        <CardTitle className="text-lg font-bold">{order.items.category}</CardTitle>
-        <Badge variant={order.charged ? 'default' : 'destructive'} className={order.charged ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}>
-          {order.charged ? <CheckCircle2 className="mr-1 h-4 w-4" /> : <XCircle className="mr-1 h-4 w-4" />}
-          {order.charged ? 'Charged' : 'Not Charged'}
-        </Badge>
-      </CardHeader>
-      <CardContent className="pb-4">
-        <div className="space-y-2 text-sm text-muted-foreground">
-          {Object.entries(order.items.selections).map(([subcategory, item]) => (
-            <div key={subcategory} className="flex justify-between">
-              <span className="font-medium text-foreground">{subcategory}:</span>
-              <span>{item}</span>
+    <Card className={`w-full shadow-md transition-all duration-300 border-l-4 ${order.charged ? 'border-green-500 bg-green-500/5' : 'border-primary'}`}>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+            <div className='flex-1'>
+                <h3 className="font-bold text-lg text-foreground">{order.items.category}</h3>
+                <div className="space-y-1 mt-2 text-sm text-muted-foreground">
+                {Object.entries(order.items.selections).map(([subcategory, item]) => (
+                    <div key={subcategory}>
+                    <span className="font-medium text-foreground/80">{subcategory}: </span>
+                    <span>{item}</span>
+                    </div>
+                ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">at {formattedTime}</p>
             </div>
-          ))}
-        </div>
-        <div className="flex items-center text-xs text-muted-foreground mt-4">
-            <Clock className="h-3 w-3 mr-1.5" />
-            Ordered at {formattedTime}
+            <div className="ml-4">
+                <Button 
+                    variant={order.charged ? 'ghost' : 'default'}
+                    size="sm"
+                    className={`rounded-full ${order.charged ? 'text-green-600' : ''}`}
+                    onClick={() => !order.charged && onMarkAsCharged(order.id)}
+                    disabled={order.charged}
+                >
+                {order.charged ? <CheckCircle2 className="mr-2"/> : <Circle className="mr-2" />}
+                {order.charged ? 'Charged' : 'Charge'}
+                </Button>
+            </div>
         </div>
       </CardContent>
-      {!order.charged && (
-        <CardFooter>
-          <Button 
-            className="w-full bg-primary hover:bg-primary/90" 
-            onClick={() => onMarkAsCharged(order.id)}
-          >
-            <CheckCircle2 className="mr-2 h-4 w-4" />
-            Mark as Charged
-          </Button>
-        </CardFooter>
-      )}
     </Card>
   );
 }
