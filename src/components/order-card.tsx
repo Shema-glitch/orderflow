@@ -14,6 +14,20 @@ interface OrderCardProps {
 export default function OrderCard({ order, onMarkAsCharged }: OrderCardProps) {
   const formattedTime = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+  // Defensive check in case an order somehow gets created without items.
+  if (!order.items) {
+    return (
+        <Card className="w-full shadow-md hover:shadow-lg transition-shadow duration-300">
+            <CardHeader>
+                <CardTitle className="text-lg font-bold">Invalid Order</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-muted-foreground">This order data is corrupted or incomplete.</p>
+            </CardContent>
+        </Card>
+    )
+  }
+
   return (
     <Card className="w-full shadow-md hover:shadow-lg transition-shadow duration-300">
       <CardHeader className="flex flex-row items-start justify-between pb-2">

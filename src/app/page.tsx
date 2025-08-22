@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import type { AppView, Order, Shift } from '@/lib/types';
+import type { AppView, Order, Shift, OrderItem } from '@/lib/types';
 import { menu } from '@/lib/menu-data';
 import ShiftScreen from '@/components/screens/shift-screen';
 import NewOrderScreen from '@/components/screens/new-order-screen';
@@ -43,9 +43,9 @@ export default function Home() {
     });
   };
 
-  const handleSaveOrder = (newOrder: Omit<Order, 'id' | 'timestamp' | 'charged'>) => {
+  const handleSaveOrder = (orderItems: Omit<OrderItem, 'charged' | 'id' | 'timestamp'>) => {
     const orderWithDetails: Order = {
-      ...newOrder,
+      items: orderItems,
       id: `order-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       timestamp: new Date().toISOString(),
       charged: false,

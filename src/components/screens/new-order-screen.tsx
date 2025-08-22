@@ -112,7 +112,7 @@ export default function NewOrderScreen({ menu, onSave, onCancel }: NewOrderScree
         </ScrollArea>
       </CardContent>
       <CardFooter className="flex justify-end p-6">
-        <Button size="lg" onClick={handleSaveOrder}>
+        <Button size="lg" onClick={handleSaveOrder} disabled={!selectedCategory || Object.keys(selections).length === 0}>
           <Save className="mr-2 h-5 w-5" />
           Save Order
         </Button>
