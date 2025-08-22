@@ -11,8 +11,7 @@ import OrdersListScreen from '@/components/screens/orders-list-screen';
 import SalesScreen from '@/components/screens/sales-screen';
 import BottomNav from '@/components/bottom-nav';
 import { useToast } from "@/hooks/use-toast";
-import { Coffee, DollarSign, List, PlayCircle, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 export default function Home() {
   const { toast } = useToast();
@@ -38,8 +37,16 @@ export default function Home() {
     setView('shift');
   };
 
-  const handleSaveOrder = (orderItems: Omit<OrderItem, 'charged' | 'id' | 'timestamp'>) => {
-    if (!orderItems.category || Object.keys(orderItems.selections).length === 0) {
+  const handleSaveOrder = (orderData: Omit<Order, 'id' | 'timestamp' | 'charged'>) => {
+     if (!orderData.customerName) {
+      toast({
+        variant: "destructive",
+        title: "Customer Name Required",
+        description: "Please enter a name for the order.",
+      });
+      return;
+    }
+    if (!orderData.items.category || Object.keys(orderData.items.selections).length === 0) {
       toast({
         variant: "destructive",
         title: "Cannot Save Empty Order",
@@ -48,16 +55,17 @@ export default function Home() {
       return;
     }
 
-    const orderWithDetails: Order = {
-      items: orderItems,
+    const newOrder: Order = {
+      ...orderData,
       id: `order-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       timestamp: new Date().toISOString(),
       charged: false,
     };
-    setOrders(prevOrders => [orderWithDetails, ...prevOrders]);
+    setOrders(prevOrders => [newOrder, ...prevOrders]);
     setView('orders_list');
     toast({
       title: "Order Saved",
+      description: `Order for ${orderData.customerName} has been saved.`
     });
   };
   
@@ -69,14 +77,23 @@ export default function Home() {
     }
     setSales(prevSales => [newSale, ...prevSales]);
     toast({
-      title: `${sale.name} Logged`,
+      title: "Sale Logged",
+      description: `${sale.type === 'Membership' ? sale.membershipType : sale.name} sale logged.`
     });
   };
 
-  const handleMarkAsCharged = (orderId: string) => {
+  const handleMarkOrderAsCharged = (orderId: string) => {
     setOrders(prevOrders =>
       prevOrders.map(order =>
         order.id === orderId ? { ...order, charged: true } : order
+      )
+    );
+  };
+
+  const handleMarkSaleAsCharged = (saleId: string) => {
+    setSales(prevSales =>
+      prevSales.map(sale =>
+        sale.id === saleId ? { ...sale, charged: true } : sale
       )
     );
   };
@@ -90,9 +107,9 @@ export default function Home() {
       case 'new_order':
         return <NewOrderScreen menu={menu} onSave={handleSaveOrder} />;
       case 'orders_list':
-        return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkAsCharged} onNewOrder={() => setView('new_order')} onCloseShift={handleCloseShift} />;
+        return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onNewOrder={() => setView('new_order')} onCloseShift={handleCloseShift} />;
       case 'sales':
-        return <SalesScreen sales={sales} onSaveSale={handleSaveSale} />;
+        return <SalesScreen sales={sales} onSaveSale={handleSaveSale} onMarkAsCharged={handleMarkSaleAsCharged}/>;
       case 'shift': // Should not be reachable when shift is open, but as a fallback
         return <ShiftScreen onOpenShift={handleOpenShift} />;
       default:

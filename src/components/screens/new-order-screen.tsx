@@ -2,19 +2,24 @@
 "use client";
 
 import { useState } from 'react';
-import type { Menu, MenuCategory, OrderItem, OrderItemSelection } from '@/lib/types';
+import type { Menu, MenuCategory, OrderItemSelection, Order } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Save, ShoppingBasket, ChevronLeft } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Save, ShoppingBasket, ChevronLeft, User, MessageSquare } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface NewOrderScreenProps {
   menu: Menu;
-  onSave: (order: Omit<OrderItem, 'charged' | 'id' | 'timestamp'>) => void;
+  onSave: (order: Omit<Order, 'id' | 'timestamp' | 'charged'>) => void;
 }
 
 export default function NewOrderScreen({ menu, onSave }: NewOrderScreenProps) {
   const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(null);
   const [selections, setSelections] = useState<OrderItemSelection>({});
+  const [customerName, setCustomerName] = useState('');
+  const [notes, setNotes] = useState('');
 
   const handleSelectCategory = (category: MenuCategory) => {
     setSelectedCategory(category);
@@ -34,18 +39,23 @@ export default function NewOrderScreen({ menu, onSave }: NewOrderScreenProps) {
   const handleSaveOrder = () => {
     if (selectedCategory) {
       onSave({
-        category: selectedCategory.name,
-        selections: selections,
+        customerName,
+        notes,
+        items: {
+            category: selectedCategory.name,
+            selections: selections,
+        }
       });
       // Reset state for next order
-      setSelectedCategory(null);
-      setSelections({});
+      handleBack();
     }
   };
 
   const handleBack = () => {
     setSelectedCategory(null);
     setSelections({});
+    setCustomerName('');
+    setNotes('');
   };
 
   if (!selectedCategory) {
@@ -86,6 +96,10 @@ export default function NewOrderScreen({ menu, onSave }: NewOrderScreenProps) {
       
       <ScrollArea className="h-[calc(100vh-220px)] pr-2">
         <div className="space-y-6">
+            <div className="space-y-2">
+                <Label htmlFor="customerName" className="flex items-center text-base"><User className="mr-2 h-4 w-4"/>Customer Name</Label>
+                <Input id="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="e.g., Aline N." />
+            </div>
           {selectedCategory.subcategories.map(sub => (
             <div key={sub.id}>
               <h3 className="text-lg font-semibold mb-3">{sub.name}</h3>
@@ -103,6 +117,10 @@ export default function NewOrderScreen({ menu, onSave }: NewOrderScreenProps) {
               </div>
             </div>
           ))}
+           <div className="space-y-2">
+                <Label htmlFor="notes" className="flex items-center text-base"><MessageSquare className="mr-2 h-4 w-4"/>Custom Notes (Optional)</Label>
+                <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g., No banana, extra whey" />
+            </div>
         </div>
       </ScrollArea>
       

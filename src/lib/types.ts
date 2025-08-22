@@ -13,6 +13,8 @@ export interface Order {
   timestamp: string;
   charged: boolean;
   items: OrderItem;
+  customerName: string;
+  notes?: string;
 }
 
 export interface Subcategory {
@@ -36,12 +38,20 @@ export interface Shift {
     startTimestamp: string | null;
 }
 
+export type SaleType = 'Quick Sale' | 'Membership';
+export type MembershipType = 'Semi-Private' | 'CrossFit' | 'PT' | 'Boxing' | '5-Class Pass';
+
 export interface Sale {
   id: string;
   timestamp: string;
-  name: string;
-  quantity: number;
-  price?: number;
+  type: SaleType;
+  // For Quick Sales
+  name?: string; 
+  quantity?: number;
+  // For Membership Sales
+  customerName?: string;
+  membershipType?: MembershipType;
+  charged: boolean;
 }
 
 export type AppView = 'shift' | 'new_order' | 'orders_list' | 'sales';
