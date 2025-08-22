@@ -4,7 +4,7 @@
 import type { Sale } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Circle, Clock, Dumbbell } from 'lucide-react';
+import { CheckCircle2, Clock, Dumbbell, AlertCircle } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 
@@ -20,12 +20,12 @@ export default function SaleCard({ sale, onMarkAsCharged }: SaleCardProps) {
   const initials = sale.customerName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
   return (
-    <Card className={`w-full shadow-md transition-all duration-300 border-l-4 ${sale.charged ? 'border-success' : 'border-destructive animate-pulse'}`}>
+    <Card className={`w-full shadow-sm transition-all duration-300 border-l-4 ${sale.charged ? 'border-success' : 'border-destructive'}`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
             <div className='flex-1 flex items-center'>
                  <Avatar className="h-10 w-10 mr-4">
-                    <AvatarFallback className="bg-primary/20 text-primary font-bold">{initials}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{initials}</AvatarFallback>
                  </Avatar>
                  <div>
                     <h3 className="font-bold text-lg text-foreground">
@@ -41,11 +41,11 @@ export default function SaleCard({ sale, onMarkAsCharged }: SaleCardProps) {
                 <Button 
                     variant={sale.charged ? 'ghost' : 'default'}
                     size="sm"
-                    className={`rounded-full ${sale.charged ? 'text-success' : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'}`}
+                    className={`rounded-full transition-colors ${sale.charged ? 'text-success' : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'}`}
                     onClick={() => !sale.charged && onMarkAsCharged(sale.id)}
                     disabled={sale.charged}
                 >
-                {sale.charged ? <CheckCircle2 className="mr-2"/> : <Circle className="mr-2" />}
+                {sale.charged ? <CheckCircle2 className="mr-2 h-5 w-5"/> : <AlertCircle className="mr-2 h-5 w-5" />}
                 {sale.charged ? 'Charged' : 'Charge'}
                 </Button>
             </div>

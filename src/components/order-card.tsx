@@ -5,7 +5,7 @@ import type { Order } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Clock, Trash2, Edit, MoreVertical } from 'lucide-react';
+import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Clock, Trash2, Edit, MoreVertical, AlertCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,12 +40,12 @@ export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder }: Ord
   const initials = order.customerName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
   return (
-    <Card className={`w-full shadow-md transition-all duration-300 border-l-4 ${order.charged ? 'border-success' : 'border-destructive animate-pulse'}`}>
+    <Card className={`w-full shadow-sm transition-all duration-300 border-l-4 ${order.charged ? 'border-success' : 'border-destructive'}`}>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between">
             <div className='flex-1 flex items-center'>
                  <Avatar className="h-10 w-10 mr-4">
-                    <AvatarFallback className="bg-primary/20 text-primary font-bold">{initials}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{initials}</AvatarFallback>
                  </Avatar>
                  <div>
                     <h3 className="font-bold text-lg text-foreground">
@@ -58,11 +58,11 @@ export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder }: Ord
                 <Button 
                     variant={order.charged ? 'ghost' : 'default'}
                     size="sm"
-                    className={`rounded-full ${order.charged ? 'text-success' : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'}`}
+                    className={`rounded-full transition-colors ${order.charged ? 'text-success' : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'}`}
                     onClick={() => !order.charged && onMarkAsCharged(order.id)}
                     disabled={order.charged}
                 >
-                {order.charged ? <CheckCircle2 className="mr-2"/> : <Circle className="mr-2" />}
+                {order.charged ? <CheckCircle2 className="mr-2 h-5 w-5"/> : <AlertCircle className="mr-2 h-5 w-5" />}
                 {order.charged ? 'Charged' : 'Charge'}
                 </Button>
 

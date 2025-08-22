@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Package, Receipt, Droplet, User, CheckCircle2, Circle, Save } from 'lucide-react';
+import { Package, Receipt, Droplet, User, Save, Dumbbell, CreditCard } from 'lucide-react';
 import SaleCard from '@/components/sale-card';
 
 
@@ -79,8 +79,8 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: Sale
 
       <Tabs defaultValue="membership" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="membership">Membership</TabsTrigger>
-          <TabsTrigger value="quick">Quick Sale</TabsTrigger>
+          <TabsTrigger value="membership"><CreditCard className="mr-2 h-5 w-5"/>Membership</TabsTrigger>
+          <TabsTrigger value="quick"><Package className="mr-2 h-5 w-5"/>Quick Sale</TabsTrigger>
         </TabsList>
         <TabsContent value="membership" className="pt-4">
           <Card>
@@ -90,7 +90,7 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: Sale
                 <Input id="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="e.g., Eric M." />
               </div>
               <div>
-                <Label className="text-base">Membership Type</Label>
+                <Label className="text-base flex items-center"><Dumbbell className="mr-2 h-4 w-4"/>Membership Type</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {membershipTypes.map(type => (
                     <Button key={type} variant={selectedMembership === type ? 'default' : 'outline'} onClick={() => setSelectedMembership(type)}>
@@ -111,7 +111,7 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: Sale
               <Button
                 key={item.name}
                 onClick={() => handleQuickSale(item.name)}
-                className="h-24 text-xl justify-start p-6 rounded-lg shadow-md"
+                className="h-24 text-xl justify-start p-6 rounded-lg shadow-sm"
                 variant="outline"
               >
                 <item.icon className="mr-4 h-8 w-8 text-primary" />

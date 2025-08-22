@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Save, ShoppingBasket, User, MessageSquare, Dumbbell, Package, Droplet, ChevronLeft } from 'lucide-react';
+import { Save, ShoppingBasket, User, MessageSquare, Dumbbell, Package, Droplet, ChevronLeft, CreditCard, Receipt } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -97,8 +97,8 @@ export default function NewOrderScreen({ menu, onSaveOrder, onSaveSale }: NewOrd
     <ScrollArea className="h-full">
     <Tabs defaultValue="order" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="order">Order</TabsTrigger>
-          <TabsTrigger value="sale">Sale</TabsTrigger>
+          <TabsTrigger value="order"><ShoppingBasket className="mr-2 h-5 w-5"/>Order</TabsTrigger>
+          <TabsTrigger value="sale"><Receipt className="mr-2 h-5 w-5"/>Sale</TabsTrigger>
         </TabsList>
         <TabsContent value="order">
           {!selectedCategory ? (
@@ -162,8 +162,8 @@ export default function NewOrderScreen({ menu, onSaveOrder, onSaveSale }: NewOrd
         <TabsContent value="sale">
             <Tabs defaultValue="membership" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="membership">Membership</TabsTrigger>
-                    <TabsTrigger value="quick">Quick Sale</TabsTrigger>
+                    <TabsTrigger value="membership"><CreditCard className="mr-2 h-5 w-5"/>Membership</TabsTrigger>
+                    <TabsTrigger value="quick"><Package className="mr-2 h-5 w-5"/>Quick Sale</TabsTrigger>
                 </TabsList>
                 <TabsContent value="membership" className="pt-4">
                     <Card>
@@ -173,7 +173,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, onSaveSale }: NewOrd
                             <Input id="membershipCustomerName" value={membershipCustomerName} onChange={(e) => setMembershipCustomerName(e.target.value)} placeholder="e.g., Eric M." />
                         </div>
                         <div>
-                            <Label className="text-base">Membership Type</Label>
+                            <Label className="text-base flex items-center"><Dumbbell className="mr-2 h-4 w-4"/>Membership Type</Label>
                             <div className="flex flex-wrap gap-2 mt-2">
                             {membershipTypes.map(type => (
                                 <Button key={type} variant={selectedMembership === type ? 'default' : 'outline'} onClick={() => setSelectedMembership(type)}>
