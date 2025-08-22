@@ -9,6 +9,12 @@ export const metadata: Metadata = {
   title: 'OrderFlow Lite',
   description: 'A modern, minimal order-taking app for shift-based environments.',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'OrderFlow Lite',
+  },
 };
 
 export default function RootLayout({
@@ -19,6 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={ptSans.variable}>
       <head>
+        <meta name="theme-color" content="#FAFAFA" />
       </head>
       <body className="font-sans antialiased overflow-hidden">
         {children}
