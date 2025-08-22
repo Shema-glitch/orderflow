@@ -45,13 +45,11 @@ export interface Sale {
   id: string;
   timestamp: string;
   type: SaleType;
-  // For Quick Sales
   name?: string; 
   quantity?: number;
-  // For Membership Sales
   customerName?: string;
   membershipType?: MembershipType;
   charged: boolean;
 }
 
-export type AppView = 'shift' | 'new_order' | 'orders_list' | 'sales';
+export type AppView = 'shift_closed' | 'new_order' | 'orders_list' | 'sales' | 'shift_summary';

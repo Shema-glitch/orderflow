@@ -11,7 +11,9 @@ import OrdersListScreen from '@/components/screens/orders-list-screen';
 import SalesScreen from '@/components/screens/sales-screen';
 import BottomNav from '@/components/bottom-nav';
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus, LogOut, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import ShiftSummaryScreen from '@/components/screens/shift-summary-screen';
 
 export default function Home() {
   const { toast } = useToast();
@@ -19,9 +21,10 @@ export default function Home() {
   const [orders, setOrders] = useLocalStorage<Order[]>('orders', []);
   const [sales, setSales] = useLocalStorage<Sale[]>('sales', []);
   const [view, setView] = useState<AppView | 'loading'>('loading');
+  const [showNewEntry, setShowNewEntry] = useState(false);
 
   useEffect(() => {
-    setView(shift.isOpen ? 'orders_list' : 'shift');
+    setView(shift.isOpen ? 'orders_list' : 'shift_closed');
   }, [shift.isOpen]);
 
   const handleOpenShift = () => {
@@ -31,10 +34,9 @@ export default function Home() {
 
   const handleCloseShift = () => {
     setShift({ isOpen: false, startTimestamp: null });
-    // Optional: Decide if orders/sales should be cleared or archived. Clearing for now.
     setOrders([]);
     setSales([]);
-    setView('shift');
+    setView('shift_closed');
   };
 
   const handleSaveOrder = (orderData: Omit<Order, 'id' | 'timestamp' | 'charged'>) => {
@@ -62,7 +64,7 @@ export default function Home() {
       charged: false,
     };
     setOrders(prevOrders => [newOrder, ...prevOrders]);
-    setView('orders_list');
+    setShowNewEntry(false);
     toast({
       title: "Order Saved",
       description: `Order for ${orderData.customerName} has been saved.`
@@ -76,6 +78,7 @@ export default function Home() {
       timestamp: new Date().toISOString(),
     }
     setSales(prevSales => [newSale, ...prevSales]);
+    setShowNewEntry(false);
     toast({
       title: "Sale Logged",
       description: `${sale.type === 'Membership' ? sale.membershipType : sale.name} sale logged.`
@@ -99,27 +102,49 @@ export default function Home() {
   };
   
   const renderView = () => {
+    if (view === 'loading') {
+      return (
+        <div className="flex h-screen w-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+    }
+    if (view === 'shift_closed') {
+      return <ShiftScreen onOpenShift={handleOpenShift} />;
+    }
     if (!shift.isOpen) {
       return <ShiftScreen onOpenShift={handleOpenShift} />;
     }
     
     switch (view) {
-      case 'new_order':
-        return <NewOrderScreen menu={menu} onSave={handleSaveOrder} />;
       case 'orders_list':
-        return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onNewOrder={() => setView('new_order')} onCloseShift={handleCloseShift} />;
+        return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} />;
       case 'sales':
         return <SalesScreen sales={sales} onSaveSale={handleSaveSale} onMarkAsCharged={handleMarkSaleAsCharged}/>;
-      case 'shift': // Should not be reachable when shift is open, but as a fallback
-        return <ShiftScreen onOpenShift={handleOpenShift} />;
+      case 'shift_summary':
+        return <ShiftSummaryScreen shift={shift} onCloseShift={handleCloseShift} />;
       default:
-         return (
+        return (
           <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-        )
+        );
     }
   };
+
+  const renderNewEntryScreen = () => {
+    return (
+      <div className="fixed inset-0 bg-background z-[100] p-4 flex flex-col">
+        <header className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-primary">New Entry</h1>
+          <Button variant="ghost" size="icon" onClick={() => setShowNewEntry(false)}>
+            <X className="h-6 w-6"/>
+          </Button>
+        </header>
+        <NewOrderScreen menu={menu} onSaveOrder={handleSaveOrder} onSaveSale={handleSaveSale} />
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground font-sans">
@@ -128,7 +153,22 @@ export default function Home() {
          {renderView()}
         </div>
       </main>
-      {shift.isOpen && <BottomNav activeView={view} setView={setView} />}
+      
+      {showNewEntry && renderNewEntryScreen()}
+
+      {shift.isOpen && !showNewEntry && (
+        <>
+          <BottomNav activeView={view as AppView} setView={setView} />
+          <Button
+            size="icon"
+            className="fixed bottom-20 right-6 h-16 w-16 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground z-50"
+            onClick={() => setShowNewEntry(true)}
+            aria-label="Create New Entry"
+          >
+            <Plus className="h-8 w-8" />
+          </Button>
+        </>
+      )}
     </div>
   );
 }

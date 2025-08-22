@@ -4,11 +4,7 @@
 import type { Sale } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Circle, User, Clock } from 'lucide-react';
-
-// A mapping for membership types to icons would be great here.
-// For now, using a generic icon.
-import { Dumbbell } from 'lucide-react';
+import { CheckCircle2, Circle, User, Clock, Dumbbell } from 'lucide-react';
 
 interface SaleCardProps {
   sale: Sale;
@@ -21,7 +17,7 @@ export default function SaleCard({ sale, onMarkAsCharged }: SaleCardProps) {
   const formattedTime = new Date(sale.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 
   return (
-    <Card className={`w-full shadow-md transition-all duration-300 border-l-4 ${sale.charged ? 'border-green-500 bg-green-500/5' : 'border-primary'}`}>
+    <Card className={`w-full shadow-md transition-all duration-300 border-l-4 ${sale.charged ? 'border-success' : 'border-destructive animate-pulse'}`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
             <div className='flex-1'>
@@ -38,7 +34,7 @@ export default function SaleCard({ sale, onMarkAsCharged }: SaleCardProps) {
                 <Button 
                     variant={sale.charged ? 'ghost' : 'default'}
                     size="sm"
-                    className={`rounded-full ${sale.charged ? 'text-green-600' : ''}`}
+                    className={`rounded-full ${sale.charged ? 'text-success' : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'}`}
                     onClick={() => !sale.charged && onMarkAsCharged(sale.id)}
                     disabled={sale.charged}
                 >

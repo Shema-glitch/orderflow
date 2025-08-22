@@ -19,7 +19,7 @@ export default function OrderCard({ order, onMarkAsCharged }: OrderCardProps) {
   const formattedTime = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 
   return (
-    <Card className={`w-full shadow-md transition-all duration-300 border-l-4 ${order.charged ? 'border-green-500 bg-green-500/5' : 'border-primary'}`}>
+    <Card className={`w-full shadow-md transition-all duration-300 border-l-4 ${order.charged ? 'border-success' : 'border-destructive animate-pulse'}`}>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between">
             <div className='flex-1'>
@@ -33,7 +33,7 @@ export default function OrderCard({ order, onMarkAsCharged }: OrderCardProps) {
                 <Button 
                     variant={order.charged ? 'ghost' : 'default'}
                     size="sm"
-                    className={`rounded-full ${order.charged ? 'text-green-600' : ''}`}
+                    className={`rounded-full ${order.charged ? 'text-success' : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'}`}
                     onClick={() => !order.charged && onMarkAsCharged(order.id)}
                     disabled={order.charged}
                 >

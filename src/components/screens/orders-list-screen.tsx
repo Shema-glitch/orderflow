@@ -9,18 +9,13 @@ import { Plus, ClipboardList, LogOut } from 'lucide-react';
 interface OrdersListScreenProps {
   orders: Order[];
   onMarkAsCharged: (orderId: string) => void;
-  onNewOrder: () => void;
-  onCloseShift: () => void;
 }
 
-export default function OrdersListScreen({ orders, onMarkAsCharged, onNewOrder, onCloseShift }: OrdersListScreenProps) {
+export default function OrdersListScreen({ orders, onMarkAsCharged }: OrdersListScreenProps) {
   return (
     <div className="w-full">
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-primary">Live Orders</h1>
-        <Button variant="ghost" size="icon" onClick={onCloseShift}>
-          <LogOut className="h-6 w-6 text-muted-foreground"/>
-        </Button>
       </header>
 
       {orders.length > 0 ? (
@@ -36,15 +31,6 @@ export default function OrdersListScreen({ orders, onMarkAsCharged, onNewOrder, 
           <p className="max-w-xs">Tap the floating '+' button to create the first order for this shift.</p>
         </div>
       )}
-
-      <Button
-        size="icon"
-        className="fixed bottom-24 right-6 h-16 w-16 rounded-full shadow-2xl bg-accent hover:bg-accent/90 z-50"
-        onClick={onNewOrder}
-        aria-label="Create New Order"
-      >
-        <Plus className="h-8 w-8" />
-      </Button>
     </div>
   );
 }
