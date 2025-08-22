@@ -78,11 +78,11 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: Sale
       </header>
 
       <Tabs defaultValue="membership" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="membership"><CreditCard className="mr-2 h-5 w-5"/>Membership</TabsTrigger>
           <TabsTrigger value="quick"><Package className="mr-2 h-5 w-5"/>Quick Sale</TabsTrigger>
         </TabsList>
-        <TabsContent value="membership" className="pt-4">
+        <TabsContent value="membership">
           <Card>
             <CardContent className="pt-6 space-y-6">
               <div className="space-y-2">
@@ -105,8 +105,8 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: Sale
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="quick" className="pt-4">
-           <div className="grid grid-cols-1 gap-4 mb-8">
+        <TabsContent value="quick">
+           <div className="grid grid-cols-1 gap-4">
             {quickSaleItems.map((item) => (
               <Button
                 key={item.name}
