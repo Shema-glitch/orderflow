@@ -12,7 +12,7 @@ import AllOrdersScreen from '@/components/screens/all-orders-screen';
 import SalesScreen from '@/components/screens/sales-screen';
 import BottomNav from '@/components/bottom-nav';
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Info, X } from 'lucide-react';
+import { Loader2, Plus, Info, X, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ShiftSummaryScreen from '@/components/screens/shift-summary-screen';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -26,7 +26,31 @@ export default function Home() {
   const [view, setView] = useState<AppView | 'loading'>('loading');
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
+  const [theme, setTheme] = useState('light');
 
+  useEffect(() => {
+    // On mount, set theme from localStorage or system preference
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      setTheme(prefersDark ? 'dark' : 'light');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
 
   useEffect(() => {
     setView(shift.isOpen ? 'orders_list' : 'shift_closed');
@@ -163,14 +187,21 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground font-sans">
-      <header className="w-full max-w-md mx-auto p-4 flex justify-between items-center bg-card shadow-sm z-50">
+       <header className="w-full max-w-md mx-auto p-4 flex justify-between items-center bg-card shadow-sm z-50">
         <div>
           <h1 className="text-xl font-bold text-primary">OrderFlow Lite</h1>
           <p className="text-xs text-muted-foreground">Current Shift</p>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => setIsAboutDialogOpen(true)}>
-          <Info className="h-5 w-5"/>
-        </Button>
+        <div className="flex items-center">
+          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+            <Sun className="h-5 w-5 scale-100 rotate-0 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-5 w-5 scale-0 rotate-90 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => setIsAboutDialogOpen(true)}>
+            <Info className="h-5 w-5"/>
+          </Button>
+        </div>
       </header>
 
       <main className="flex-1 overflow-y-auto p-4 pb-24">
@@ -186,7 +217,7 @@ export default function Home() {
           <BottomNav activeView={view as AppView} setView={setView} />
           <Button
             size="lg"
-            className="fixed bottom-24 right-6 h-16 w-16 rounded-full shadow-2xl bg-accent hover:bg-accent/90 text-accent-foreground z-50"
+            className="fixed bottom-24 right-6 h-16 w-16 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground z-50"
             onClick={() => setShowNewEntry(true)}
             aria-label="Create New Entry"
           >
