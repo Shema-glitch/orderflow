@@ -4,7 +4,8 @@
 import type { Order } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Circle, User, ShoppingBasket, MessageSquare, Clock } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Clock } from 'lucide-react';
 
 interface OrderCardProps {
   order: Order;
@@ -17,17 +18,22 @@ export default function OrderCard({ order, onMarkAsCharged }: OrderCardProps) {
   }
 
   const formattedTime = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+  const initials = order.customerName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
   return (
     <Card className={`w-full shadow-md transition-all duration-300 border-l-4 ${order.charged ? 'border-success' : 'border-destructive animate-pulse'}`}>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between">
-            <div className='flex-1'>
-                 <h3 className="font-bold text-lg text-foreground flex items-center">
-                    <User className="mr-2 h-5 w-5 text-primary"/>
-                    {order.customerName}
-                </h3>
-                <p className="text-sm text-muted-foreground ml-7 -mt-1">{order.items.category}</p>
+            <div className='flex-1 flex items-center'>
+                 <Avatar className="h-10 w-10 mr-4">
+                    <AvatarFallback className="bg-primary/20 text-primary font-bold">{initials}</AvatarFallback>
+                 </Avatar>
+                 <div>
+                    <h3 className="font-bold text-lg text-foreground">
+                        {order.customerName}
+                    </h3>
+                    <p className="text-sm text-muted-foreground -mt-1">{order.items.category}</p>
+                </div>
             </div>
             <div className="ml-4">
                 <Button 
@@ -44,11 +50,11 @@ export default function OrderCard({ order, onMarkAsCharged }: OrderCardProps) {
         </div>
 
         <div className="space-y-2 text-sm text-muted-foreground pl-1">
-           <div className="flex items-center">
-                <ShoppingBasket className="mr-2 h-4 w-4 text-primary/80"/>
-                <div className='flex-1'>
+           <div className="flex items-start">
+                <ShoppingBasket className="mr-3 mt-1 h-4 w-4 text-primary/80"/>
+                <div className='flex-1 flex flex-wrap'>
                     {Object.entries(order.items.selections).map(([subcategory, item]) => (
-                        <span key={subcategory} className="mr-3">
+                        <span key={subcategory} className="mr-4 mb-1">
                            <span className="font-medium text-foreground/80">{subcategory}: </span>
                            <span>{item}</span>
                         </span>
@@ -58,14 +64,14 @@ export default function OrderCard({ order, onMarkAsCharged }: OrderCardProps) {
 
            {order.notes && (
              <div className="flex items-start">
-                <MessageSquare className="mr-2 mt-0.5 h-4 w-4 text-primary/80"/>
+                <MessageSquare className="mr-3 mt-0.5 h-4 w-4 text-primary/80"/>
                 <p className="flex-1 text-foreground/90 italic">"{order.notes}"</p>
              </div>
            )}
 
             <div className="flex items-center pt-1">
-                <Clock className="mr-2 h-4 w-4 text-primary/80"/>
-                <span>{formattedTime}</span>
+                <Clock className="mr-3 h-4 w-4 text-primary/80"/>
+                <span className="text-xs font-mono bg-muted px-2 py-1 rounded-md">{formattedTime}</span>
             </div>
         </div>
         

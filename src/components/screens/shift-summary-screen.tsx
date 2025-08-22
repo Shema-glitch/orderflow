@@ -2,10 +2,22 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { LogOut, Clock, Calendar } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LogOut, Clock, Calendar, AlertTriangle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import type { Shift } from "@/lib/types";
 import { useEffect, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 
 interface ShiftSummaryScreenProps {
   shift: Shift;
@@ -57,8 +69,8 @@ export default function ShiftSummaryScreen({ shift, onCloseShift }: ShiftSummary
   return (
     <div className="w-full">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold text-primary">Shift Active</h1>
-        <p className="text-muted-foreground">Review your current shift details below.</p>
+        <h1 className="text-3xl font-bold text-primary">Current Shift</h1>
+        <p className="text-muted-foreground">Review your active shift details.</p>
       </header>
       
       <Card>
@@ -76,7 +88,7 @@ export default function ShiftSummaryScreen({ shift, onCloseShift }: ShiftSummary
             <div className="flex items-center">
                 <Clock className="mr-3 h-5 w-5 text-primary"/>
                  <div>
-                    <p className="font-semibold">{elapsedTime}</p>
+                    <p className="font-semibold tabular-nums">{elapsedTime}</p>
                     <p className="text-sm text-muted-foreground">Elapsed Time</p>
                 </div>
             </div>
@@ -84,15 +96,35 @@ export default function ShiftSummaryScreen({ shift, onCloseShift }: ShiftSummary
       </Card>
       
       <div className="mt-8">
-         <Button
-            size="lg"
-            variant="destructive"
-            onClick={onCloseShift}
-            className="w-full py-6 text-lg rounded-full shadow-lg"
-        >
-            <LogOut className="mr-3 h-6 w-6" />
-            Close Shift
-        </Button>
+        <AlertDialog>
+            <AlertDialogTrigger asChild>
+                <Button
+                    size="lg"
+                    variant="destructive"
+                    className="w-full py-6 text-lg rounded-full shadow-lg"
+                >
+                    <LogOut className="mr-3 h-6 w-6" />
+                    Close Shift
+                </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center">
+                        <AlertTriangle className="mr-2 text-destructive" />
+                        Are you sure you want to end your shift?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Closing the shift will clear all current orders and sales data. This action cannot be undone.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={onCloseShift} className="bg-destructive hover:bg-destructive/90">
+                        Yes, Close Shift
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
       </div>
 
     </div>

@@ -11,9 +11,11 @@ import OrdersListScreen from '@/components/screens/orders-list-screen';
 import SalesScreen from '@/components/screens/sales-screen';
 import BottomNav from '@/components/bottom-nav';
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, LogOut, X } from 'lucide-react';
+import { Loader2, Plus, LogOut, X, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ShiftSummaryScreen from '@/components/screens/shift-summary-screen';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction } from '@/components/ui/alert-dialog';
+
 
 export default function Home() {
   const { toast } = useToast();
@@ -22,6 +24,8 @@ export default function Home() {
   const [sales, setSales] = useLocalStorage<Sale[]>('sales', []);
   const [view, setView] = useState<AppView | 'loading'>('loading');
   const [showNewEntry, setShowNewEntry] = useState(false);
+  const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
+
 
   useEffect(() => {
     setView(shift.isOpen ? 'orders_list' : 'shift_closed');
@@ -66,8 +70,8 @@ export default function Home() {
     setOrders(prevOrders => [newOrder, ...prevOrders]);
     setShowNewEntry(false);
     toast({
-      title: "Order Saved",
-      description: `Order for ${orderData.customerName} has been saved.`
+      title: "Order Saved!",
+      description: `Don't forget to mark it as 'Charged' once payment is received.`,
     });
   };
   
@@ -148,6 +152,16 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground font-sans">
+      <header className="w-full max-w-md mx-auto p-4 flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-bold text-primary">OrderFlow Lite</h1>
+          <p className="text-xs text-muted-foreground">Current Shift</p>
+        </div>
+        <Button variant="ghost" size="icon" onClick={() => setIsAboutDialogOpen(true)}>
+          <Info className="h-5 w-5"/>
+        </Button>
+      </header>
+
       <main className="flex-1 overflow-y-auto p-4 pb-24">
         <div className="w-full max-w-md mx-auto">
          {renderView()}
@@ -160,8 +174,8 @@ export default function Home() {
         <>
           <BottomNav activeView={view as AppView} setView={setView} />
           <Button
-            size="icon"
-            className="fixed bottom-20 right-6 h-16 w-16 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground z-50"
+            size="lg"
+            className="fixed bottom-20 right-6 h-16 w-16 rounded-full shadow-2xl bg-accent hover:bg-accent/90 text-accent-foreground z-50"
             onClick={() => setShowNewEntry(true)}
             aria-label="Create New Entry"
           >
@@ -169,6 +183,24 @@ export default function Home() {
           </Button>
         </>
       )}
+
+      <AlertDialog open={isAboutDialogOpen} onOpenChange={setIsAboutDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>About OrderFlow Lite</AlertDialogTitle>
+            <AlertDialogDescription>
+              Version 1.0.0
+              <br />
+              © 2024 Your Company Name. All Rights Reserved.
+              <br /><br />
+              This app is a personal workflow assistant designed to help you track orders and sales during your shift.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setIsAboutDialogOpen(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
