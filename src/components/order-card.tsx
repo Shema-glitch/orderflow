@@ -5,14 +5,33 @@ import type { Order } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Clock } from 'lucide-react';
+import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Clock, Trash2, Edit, MoreVertical } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 
 interface OrderCardProps {
   order: Order;
   onMarkAsCharged: (orderId: string) => void;
+  onDeleteOrder: (orderId: string) => void;
 }
 
-export default function OrderCard({ order, onMarkAsCharged }: OrderCardProps) {
+export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder }: OrderCardProps) {
   if (!order.items) {
     return null;
   }
@@ -35,7 +54,7 @@ export default function OrderCard({ order, onMarkAsCharged }: OrderCardProps) {
                     <p className="text-sm text-muted-foreground -mt-1">{order.items.category}</p>
                 </div>
             </div>
-            <div className="ml-4">
+            <div className="flex items-center ml-2">
                 <Button 
                     variant={order.charged ? 'ghost' : 'default'}
                     size="sm"
@@ -46,6 +65,42 @@ export default function OrderCard({ order, onMarkAsCharged }: OrderCardProps) {
                 {order.charged ? <CheckCircle2 className="mr-2"/> : <Circle className="mr-2" />}
                 {order.charged ? 'Charged' : 'Charge'}
                 </Button>
+
+                 <AlertDialog>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="ml-1">
+                          <MoreVertical className="h-5 w-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                            <Edit className="mr-2 h-4 w-4" />
+                            <span>Edit</span>
+                        </DropdownMenuItem>
+                         <AlertDialogTrigger asChild>
+                            <DropdownMenuItem className="text-destructive focus:text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Delete</span>
+                            </DropdownMenuItem>
+                         </AlertDialogTrigger>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                     <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete this order.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDeleteOrder(order.id)} className="bg-destructive hover:bg-destructive/90">
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                 </AlertDialog>
             </div>
         </div>
 

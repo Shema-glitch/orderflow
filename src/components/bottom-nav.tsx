@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from '@/components/ui/button';
-import { ListOrdered, LayoutList, DollarSign, Clock, List } from 'lucide-react';
+import { ListOrdered, LayoutList, DollarSign, Clock, List, ListChecks } from 'lucide-react';
 import type { AppView } from '@/lib/types';
 
 interface BottomNavProps {
@@ -13,6 +13,7 @@ interface BottomNavProps {
 export default function BottomNav({ activeView, setView }: BottomNavProps) {
   const navItems = [
     { view: 'orders_list', icon: ListOrdered, label: 'Uncharged' },
+    { view: 'all_orders', icon: ListChecks, label: 'All Orders' },
     { view: 'sales', icon: DollarSign, label: 'Sales' },
     { view: 'shift_summary', icon: Clock, label: 'Shift' },
   ];
@@ -28,7 +29,7 @@ export default function BottomNav({ activeView, setView }: BottomNavProps) {
             onClick={() => setView(item.view as AppView)}
           >
             <item.icon className={`h-6 w-6 ${activeView === item.view ? 'text-primary' : 'text-muted-foreground'}`} />
-            <span className={`text-xs font-medium ${activeView === item.view ? 'text-primary' : 'text-muted-foreground'}`}>
+            <span className={`text-xs font-medium text-center ${activeView === item.view ? 'text-primary' : 'text-muted-foreground'}`}>
               {item.label}
             </span>
           </Button>

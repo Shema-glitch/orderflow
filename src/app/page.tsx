@@ -8,10 +8,11 @@ import { menu } from '@/lib/menu-data';
 import ShiftScreen from '@/components/screens/shift-screen';
 import NewOrderScreen from '@/components/screens/new-order-screen';
 import OrdersListScreen from '@/components/screens/orders-list-screen';
+import AllOrdersScreen from '@/components/screens/all-orders-screen';
 import SalesScreen from '@/components/screens/sales-screen';
 import BottomNav from '@/components/bottom-nav';
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, LogOut, X, Info } from 'lucide-react';
+import { Loader2, Plus, Info, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ShiftSummaryScreen from '@/components/screens/shift-summary-screen';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -97,6 +98,14 @@ export default function Home() {
     );
   };
 
+  const handleDeleteOrder = (orderId: string) => {
+    setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+    toast({
+      title: "Order Deleted",
+      description: "The order has been removed from your list.",
+    });
+  };
+
   const handleMarkSaleAsCharged = (saleId: string) => {
     setSales(prevSales =>
       prevSales.map(sale =>
@@ -122,7 +131,9 @@ export default function Home() {
     
     switch (view) {
       case 'orders_list':
-        return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} />;
+        return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} />;
+      case 'all_orders':
+        return <AllOrdersScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} />;
       case 'sales':
         return <SalesScreen sales={sales} onSaveSale={handleSaveSale} onMarkAsCharged={handleMarkSaleAsCharged}/>;
       case 'shift_summary':
