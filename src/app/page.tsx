@@ -163,7 +163,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground font-sans">
-      <header className="w-full max-w-md mx-auto p-4 flex justify-between items-center">
+      <header className="w-full max-w-md mx-auto p-4 flex justify-between items-center bg-card shadow-sm z-50">
         <div>
           <h1 className="text-xl font-bold text-primary">OrderFlow Lite</h1>
           <p className="text-xs text-muted-foreground">Current Shift</p>
@@ -186,7 +186,7 @@ export default function Home() {
           <BottomNav activeView={view as AppView} setView={setView} />
           <Button
             size="lg"
-            className="fixed bottom-20 right-6 h-16 w-16 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground z-50"
+            className="fixed bottom-24 right-6 h-16 w-16 rounded-full shadow-2xl bg-accent hover:bg-accent/90 text-accent-foreground z-50"
             onClick={() => setShowNewEntry(true)}
             aria-label="Create New Entry"
           >
