@@ -9,9 +9,10 @@ interface OrdersListScreenProps {
   orders: Order[];
   onMarkAsCharged: (orderId: string) => void;
   onDeleteOrder: (orderId: string) => void;
+  onEditOrder: (order: Order) => void;
 }
 
-export default function OrdersListScreen({ orders, onMarkAsCharged, onDeleteOrder }: OrdersListScreenProps) {
+export default function OrdersListScreen({ orders, onMarkAsCharged, onDeleteOrder, onEditOrder }: OrdersListScreenProps) {
   const unchargedOrders = orders.filter(order => !order.charged);
   const chargedOrders = orders.filter(order => order.charged);
 
@@ -25,7 +26,7 @@ export default function OrdersListScreen({ orders, onMarkAsCharged, onDeleteOrde
       {unchargedOrders.length > 0 ? (
         <div className="space-y-4">
           {unchargedOrders.map(order => (
-            <OrderCard key={order.id} order={order} onMarkAsCharged={onMarkAsCharged} onDeleteOrder={onDeleteOrder} />
+            <OrderCard key={order.id} order={order} onMarkAsCharged={onMarkAsCharged} onDeleteOrder={onDeleteOrder} onEditOrder={onEditOrder} />
           ))}
         </div>
       ) : (

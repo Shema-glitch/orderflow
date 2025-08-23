@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import type { AppView, Order, Shift, Sale } from '@/lib/types';
-import { menu } from '@/lib/menu-data';
+import { menu as initialMenu } from '@/lib/menu-data';
 import ShiftScreen from '@/components/screens/shift-screen';
 import NewOrderScreen from '@/components/screens/new-order-screen';
 import OrdersListScreen from '@/components/screens/orders-list-screen';
@@ -28,9 +28,11 @@ export default function Home() {
   const [sales, setSales] = useLocalStorage<Sale[]>('sales', []);
   const [view, setView] = useState<AppView | 'loading'>('loading');
   const [showNewEntry, setShowNewEntry] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const [theme, setTheme] = useState('light');
   const user = useAuth();
+  const [menu, setMenu] = useLocalStorage('menu', initialMenu);
 
   useEffect(() => {
     // On mount, set theme from localStorage or system preference
@@ -71,6 +73,7 @@ export default function Home() {
     setShift({ isOpen: false, startTimestamp: null });
     setOrders([]);
     setSales([]);
+    setEditingOrder(null);
     setView('shift_closed');
   };
 
@@ -83,7 +86,11 @@ export default function Home() {
       });
       return;
     }
-    if (!orderData.items.category || Object.keys(orderData.items.selections).length === 0) {
+    const hasSelections = Object.values(orderData.items.selections).some(
+      (selection) => Array.isArray(selection) && selection.length > 0
+    );
+
+    if (!orderData.items.category || !hasSelections) {
       toast({
         variant: "destructive",
         title: "Cannot Save Empty Order",
@@ -92,18 +99,30 @@ export default function Home() {
       return;
     }
 
-    const newOrder: Order = {
-      ...orderData,
-      id: `order-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      timestamp: new Date().toISOString(),
-      charged: false,
-    };
-    setOrders(prevOrders => [newOrder, ...prevOrders]);
+    if (editingOrder) {
+      // Update existing order
+      setOrders(prevOrders => prevOrders.map(o => o.id === editingOrder.id ? {...o, ...orderData} : o));
+      toast({
+        title: "Order Updated!",
+        description: `Changes to ${orderData.customerName}'s order have been saved.`,
+      });
+    } else {
+      // Create new order
+      const newOrder: Order = {
+        ...orderData,
+        id: `order-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        timestamp: new Date().toISOString(),
+        charged: false,
+      };
+      setOrders(prevOrders => [newOrder, ...prevOrders]);
+      toast({
+        title: "Order Saved!",
+        description: `Don't forget to mark it as 'Charged' once payment is received.`,
+      });
+    }
+    
     setShowNewEntry(false);
-    toast({
-      title: "Order Saved!",
-      description: `Don't forget to mark it as 'Charged' once payment is received.`,
-    });
+    setEditingOrder(null);
   };
   
   const handleSaveSale = (sale: Omit<Sale, 'id' | 'timestamp'>) => {
@@ -118,6 +137,11 @@ export default function Home() {
       title: "Sale Logged",
       description: `${sale.type === 'Membership' ? sale.membershipType : sale.name} sale logged.`
     });
+  };
+
+  const handleEditOrder = (order: Order) => {
+    setEditingOrder(order);
+    setShowNewEntry(true);
   };
 
   const handleMarkOrderAsCharged = (orderId: string) => {
@@ -143,6 +167,11 @@ export default function Home() {
       )
     );
   };
+
+  const closeNewEntryScreen = () => {
+    setShowNewEntry(false);
+    setEditingOrder(null);
+  };
   
   const renderView = () => {
     if (user === null) {
@@ -165,9 +194,9 @@ export default function Home() {
     
     switch (view) {
       case 'orders_list':
-        return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} />;
+        return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} />;
       case 'all_orders':
-        return <AllOrdersScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} />;
+        return <AllOrdersScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} />;
       case 'sales':
         return <SalesScreen sales={sales} onSaveSale={handleSaveSale} onMarkAsCharged={handleMarkSaleAsCharged}/>;
       case 'shift_summary':
@@ -185,12 +214,12 @@ export default function Home() {
     return (
       <div className="fixed inset-0 bg-background z-[100] p-4 flex flex-col">
         <header className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-primary">New Entry</h1>
-          <Button variant="ghost" size="icon" onClick={() => setShowNewEntry(false)}>
+          <h1 className="text-2xl font-bold text-primary">{editingOrder ? 'Edit Order' : 'New Entry'}</h1>
+          <Button variant="ghost" size="icon" onClick={closeNewEntryScreen}>
             <X className="h-6 w-6"/>
           </Button>
         </header>
-        <NewOrderScreen menu={menu} onSaveOrder={handleSaveOrder} onSaveSale={handleSaveSale} />
+        <NewOrderScreen menu={menu} onSaveOrder={handleSaveOrder} onSaveSale={handleSaveSale} editingOrder={editingOrder} />
       </div>
     )
   }
@@ -248,11 +277,11 @@ export default function Home() {
           <AlertDialogHeader>
             <AlertDialogTitle>About OrderFlow Lite</AlertDialogTitle>
             <AlertDialogDescription>
-              Version 1.0.0
+              Version 1.1.0
               <br />
-              © 2024 Your Company Name. All Rights Reserved.
+              © 2025 Shema Charmant. All Rights Reserved.
               <br /><br />
-              This app is a personal workflow assistant designed to help you track orders and sales during your shift.
+              This app is a personal workflow assistant designed to help me track orders and sales during my shift.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

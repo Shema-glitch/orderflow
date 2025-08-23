@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Menu, MenuCategory, OrderItemSelection, Order, Sale, MembershipType } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ interface NewOrderScreenProps {
   menu: Menu;
   onSaveOrder: (order: Omit<Order, 'id' | 'timestamp' | 'charged'>) => void;
   onSaveSale: (sale: Omit<Sale, 'id' | 'timestamp'>) => void;
+  editingOrder: Order | null;
 }
 
 const quickSaleItems = [
@@ -24,7 +25,7 @@ const quickSaleItems = [
   { name: 'Snack', icon: Package },
 ];
 
-export default function NewOrderScreen({ menu, onSaveOrder, onSaveSale }: NewOrderScreenProps) {
+export default function NewOrderScreen({ menu, onSaveOrder, onSaveSale, editingOrder }: NewOrderScreenProps) {
   const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(null);
   const [selections, setSelections] = useState<OrderItemSelection>({});
   const [customerName, setCustomerName] = useState('');
@@ -33,19 +34,35 @@ export default function NewOrderScreen({ menu, onSaveOrder, onSaveSale }: NewOrd
   const [membershipCustomerName, setMembershipCustomerName] = useState('');
   const [selectedMembership, setSelectedMembership] = useState<MembershipType | null>(null);
 
+  useEffect(() => {
+    if (editingOrder && menu.categories) {
+      const category = menu.categories.find(c => c.name === editingOrder.items.category) || null;
+      setSelectedCategory(category);
+      setSelections(editingOrder.items.selections || {});
+      setCustomerName(editingOrder.customerName || '');
+      setNotes(editingOrder.notes || '');
+    }
+  }, [editingOrder, menu.categories]);
+
+
   const handleSelectCategory = (category: MenuCategory) => {
     setSelectedCategory(category);
+    // Reset selections for the new category
     const initialSelections = category.subcategories.reduce((acc, sub) => {
-        if (sub.items.length > 0) {
-          acc[sub.name] = sub.items[0];
-        }
+        acc[sub.name] = []; // Initialize with empty array for multiple selections
         return acc;
     }, {} as OrderItemSelection);
     setSelections(initialSelections);
   };
 
   const handleItemSelect = (subcategoryName: string, item: string) => {
-    setSelections(prev => ({ ...prev, [subcategoryName]: item }));
+    setSelections(prev => {
+        const currentSelection = prev[subcategoryName] || [];
+        const newSelection = currentSelection.includes(item)
+            ? currentSelection.filter(i => i !== item) // Deselect if already selected
+            : [...currentSelection, item]; // Select if not selected
+        return { ...prev, [subcategoryName]: newSelection };
+    });
   };
 
   const handleSaveOrderClick = () => {
@@ -93,6 +110,10 @@ export default function NewOrderScreen({ menu, onSaveOrder, onSaveSale }: NewOrd
     setNotes('');
   };
 
+  const isItemSelected = (subcategoryName: string, item: string) => {
+      return selections[subcategoryName]?.includes(item) ?? false;
+  }
+
   return (
     <ScrollArea className="h-full">
     <Tabs defaultValue="order" className="w-full">
@@ -137,7 +158,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, onSaveSale }: NewOrd
                             {sub.items.map(item => (
                             <Button
                                 key={item}
-                                variant={selections[sub.name] === item ? 'default' : 'outline'}
+                                variant={isItemSelected(sub.name, item) ? 'default' : 'outline'}
                                 onClick={() => handleItemSelect(sub.name, item)}
                                 className="flex-grow sm:flex-grow-0"
                             >
@@ -153,7 +174,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, onSaveSale }: NewOrd
                     </div>
                     <Button size="lg" onClick={handleSaveOrderClick} className="w-full text-lg py-6 rounded-full shadow-lg">
                         <Save className="mr-2 h-5 w-5" />
-                        Save Order
+                        {editingOrder ? 'Update Order' : 'Save Order'}
                     </Button>
                 </div>
             </div>

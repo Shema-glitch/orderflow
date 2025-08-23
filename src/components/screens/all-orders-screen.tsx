@@ -10,9 +10,10 @@ interface AllOrdersScreenProps {
   orders: Order[];
   onMarkAsCharged: (orderId: string) => void;
   onDeleteOrder: (orderId: string) => void;
+  onEditOrder: (order: Order) => void;
 }
 
-export default function AllOrdersScreen({ orders, onMarkAsCharged, onDeleteOrder }: AllOrdersScreenProps) {
+export default function AllOrdersScreen({ orders, onMarkAsCharged, onDeleteOrder, onEditOrder }: AllOrdersScreenProps) {
 
   return (
     <div className="w-full">
@@ -29,7 +30,7 @@ export default function AllOrdersScreen({ orders, onMarkAsCharged, onDeleteOrder
       {orders.length > 0 ? (
         <div className="space-y-4">
           {orders.map(order => (
-            <OrderCard key={order.id} order={order} onMarkAsCharged={onMarkAsCharged} onDeleteOrder={onDeleteOrder} />
+            <OrderCard key={order.id} order={order} onMarkAsCharged={onMarkAsCharged} onDeleteOrder={onDeleteOrder} onEditOrder={onEditOrder} />
           ))}
         </div>
       ) : (

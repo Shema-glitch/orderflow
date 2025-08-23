@@ -29,9 +29,10 @@ interface OrderCardProps {
   order: Order;
   onMarkAsCharged: (orderId: string) => void;
   onDeleteOrder: (orderId: string) => void;
+  onEditOrder: (order: Order) => void;
 }
 
-export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder }: OrderCardProps) {
+export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder, onEditOrder }: OrderCardProps) {
   if (!order.items) {
     return null;
   }
@@ -74,7 +75,7 @@ export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder }: Ord
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEditOrder(order)}>
                             <Edit className="mr-2 h-4 w-4" />
                             <span>Edit</span>
                         </DropdownMenuItem>
@@ -108,11 +109,13 @@ export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder }: Ord
            <div className="flex items-start">
                 <ShoppingBasket className="mr-3 mt-1 h-4 w-4 text-primary/80"/>
                 <div className='flex-1 flex flex-wrap'>
-                    {Object.entries(order.items.selections).map(([subcategory, item]) => (
-                        <span key={subcategory} className="mr-4 mb-1">
-                           <span className="font-medium text-foreground/80">{subcategory}: </span>
-                           <span>{item}</span>
-                        </span>
+                    {Object.entries(order.items.selections).map(([subcategory, items]) => (
+                         Array.isArray(items) && items.length > 0 && (
+                            <div key={subcategory} className="mr-4 mb-1">
+                               <span className="font-medium text-foreground/80">{subcategory}: </span>
+                               <span>{items.join(', ')}</span>
+                            </div>
+                         )
                     ))}
                 </div>
            </div>

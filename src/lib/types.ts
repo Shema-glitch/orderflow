@@ -1,6 +1,6 @@
 
 export interface OrderItemSelection {
-  [subcategoryName: string]: string;
+  [subcategoryName: string]: string[];
 }
 
 export interface OrderItem {
