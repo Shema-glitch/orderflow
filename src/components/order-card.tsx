@@ -57,13 +57,13 @@ export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder, onEdi
             </div>
             <div className="flex items-center ml-2">
                 <Button 
-                    variant={order.charged ? 'ghost' : 'default'}
+                    variant={order.charged ? 'ghost' : 'destructive'}
                     size="sm"
-                    className={`rounded-full transition-colors ${order.charged ? 'text-success' : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'}`}
+                    className={`rounded-full transition-colors ${order.charged ? 'text-success' : ''}`}
                     onClick={() => !order.charged && onMarkAsCharged(order.id)}
                     disabled={order.charged}
                 >
-                {order.charged ? <CheckCircle2 className="mr-2 h-5 w-5"/> : <AlertCircle className="mr-2 h-5 w-5" />}
+                {order.charged ? <CheckCircle2 className="mr-2 h-5 w-5"/> : <Circle className="mr-2 h-5 w-5" />}
                 {order.charged ? 'Charged' : 'Charge'}
                 </Button>
 

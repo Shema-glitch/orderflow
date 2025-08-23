@@ -3,8 +3,7 @@
 
 import type { Order } from '@/lib/types';
 import OrderCard from '@/components/order-card';
-import { ClipboardList, Filter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ClipboardList } from 'lucide-react';
 
 interface AllOrdersScreenProps {
   orders: Order[];
@@ -21,9 +20,6 @@ export default function AllOrdersScreen({ orders, onMarkAsCharged, onDeleteOrder
         <h1 className="text-3xl font-bold text-primary">All Orders</h1>
         <div className="flex items-center gap-2">
             <span className="font-bold text-3xl text-muted-foreground">{orders.length}</span>
-            <Button variant="outline" size="icon" disabled>
-                <Filter className="h-5 w-5"/>
-            </Button>
         </div>
       </header>
 
