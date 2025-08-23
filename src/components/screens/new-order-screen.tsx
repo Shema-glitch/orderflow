@@ -41,6 +41,12 @@ export default function NewOrderScreen({ menu, onSaveOrder, onSaveSale, editingO
       setSelections(editingOrder.items.selections || {});
       setCustomerName(editingOrder.customerName || '');
       setNotes(editingOrder.notes || '');
+    } else {
+      // Reset state when editingOrder is null (i.e., for a new order)
+      setSelectedCategory(null);
+      setSelections({});
+      setCustomerName('');
+      setNotes('');
     }
   }, [editingOrder, menu.categories]);
 
@@ -111,7 +117,11 @@ export default function NewOrderScreen({ menu, onSaveOrder, onSaveSale, editingO
   };
 
   const isItemSelected = (subcategoryName: string, item: string) => {
-      return selections[subcategoryName]?.includes(item) ?? false;
+      const selection = selections[subcategoryName];
+      if (Array.isArray(selection)) {
+        return selection.includes(item);
+      }
+      return false;
   }
 
   return (
