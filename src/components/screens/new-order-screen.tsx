@@ -63,7 +63,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, onSaveSale, editingO
 
   const handleItemSelect = (subcategoryName: string, item: string) => {
     setSelections(prev => {
-        const currentSelection = prev[subcategoryName] || [];
+        const currentSelection = Array.isArray(prev[subcategoryName]) ? prev[subcategoryName] : [];
         const newSelection = currentSelection.includes(item)
             ? currentSelection.filter(i => i !== item) // Deselect if already selected
             : [...currentSelection, item]; // Select if not selected
