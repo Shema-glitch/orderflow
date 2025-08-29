@@ -4,7 +4,7 @@
 import type { Sale } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, Dumbbell, AlertCircle, Package, Droplet, Circle } from 'lucide-react';
+import { CheckCircle2, Clock, Dumbbell, Package, Droplet, Circle } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 
@@ -24,9 +24,9 @@ export default function SaleCard({ sale, onMarkAsCharged }: SaleCardProps) {
     if (isMembership && sale.customerName) {
         return sale.customerName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
     }
-    if (sale.name === 'Water Bottle') return 'WB';
-    if (sale.name === 'Snack') return 'SN';
-    return 'Q';
+    if (sale.name === 'Water Bottle') return 'W';
+    if (sale.name === 'Snack') return 'S';
+    return '?';
   }
   
   const getIcon = () => {

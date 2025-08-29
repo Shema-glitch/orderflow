@@ -38,13 +38,12 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: Sale
       type: 'Quick Sale',
       name,
       quantity: 1,
-      charged: false, // Quick sales are now uncharged by default
+      charged: false,
     });
   };
 
   const handleSaveMembershipSale = () => {
     if (!customerName || !selectedMembership) {
-      // Simple validation feedback, could be a toast
       alert('Please enter a customer name and select a membership type.');
       return;
     }
@@ -52,22 +51,15 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: Sale
       type: 'Membership',
       customerName,
       membershipType: selectedMembership,
-      charged: false, // Memberships need to be marked as charged
+      charged: false,
     });
     // Reset form
     setCustomerName('');
     setSelectedMembership(null);
   };
 
-  const membershipSales = sales.filter(s => s.type === 'Membership');
-  const quickSales = sales.filter(s => s.type === 'Quick Sale');
-
-  const quickSalesSummary = quickSales.reduce((acc, sale) => {
-    if(sale.name) {
-      acc[sale.name] = (acc[sale.name] || 0) + (sale.quantity || 0);
-    }
-    return acc;
-  }, {} as Record<string, number>);
+  const unchargedSales = sales.filter(s => !s.charged);
+  const chargedSales = sales.filter(s => s.charged);
 
 
   return (
@@ -124,25 +116,15 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: Sale
 
 
       <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">Shift Sales Summary</h2>
+        <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Uncharged Sales</h2>
+            <span className="font-bold text-2xl text-destructive">{unchargedSales.length}</span>
+        </div>
         {sales.length > 0 ? (
           <div className="space-y-4">
-            {membershipSales.map(sale => (
+            {sales.map(sale => (
                 <SaleCard key={sale.id} sale={sale} onMarkAsCharged={onMarkAsCharged} />
             ))}
-            {Object.keys(quickSalesSummary).length > 0 && (
-              <Card>
-                <CardContent className="p-4">
-                  <h3 className="font-bold mb-2">Quick Sales</h3>
-                   {Object.entries(quickSalesSummary).map(([name, quantity]) => (
-                    <div key={name} className="flex justify-between items-center text-sm">
-                      <span className="font-semibold">{name}</span>
-                      <span className="text-muted-foreground font-mono bg-muted px-2 py-1 rounded-md">{quantity} sold</span>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
           </div>
         ) : (
           <p className="text-muted-foreground text-center mt-4 border-2 border-dashed rounded-lg p-8">No sales logged yet.</p>
