@@ -77,14 +77,14 @@ export default function Home() {
     setView('shift_closed');
   };
 
-  const handleSaveOrder = (orderData: Omit<Order, 'id' | 'timestamp' | 'charged'>) => {
+  const handleSaveOrder = (orderData: Omit<Order, 'id' | 'timestamp' | 'charged'>): boolean => {
      if (!orderData.customerName) {
       toast({
         variant: "destructive",
         title: "Customer Name Required",
         description: "Please enter a name for the order.",
       });
-      return;
+      return false; // Indicate failure
     }
     const hasSelections = Object.values(orderData.items.selections).some(
       (selection) => Array.isArray(selection) && selection.length > 0
@@ -96,7 +96,7 @@ export default function Home() {
         title: "Cannot Save Empty Order",
         description: "Please make selections before saving.",
       });
-      return;
+      return false; // Indicate failure
     }
 
     if (editingOrder) {
@@ -123,6 +123,7 @@ export default function Home() {
     
     setShowNewEntry(false);
     setEditingOrder(null);
+    return true; // Indicate success
   };
   
   const handleSaveSale = (sale: Omit<Sale, 'id' | 'timestamp'>) => {
