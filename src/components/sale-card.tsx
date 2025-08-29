@@ -4,7 +4,7 @@
 import type { Sale } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, Dumbbell, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Clock, Dumbbell, AlertCircle, Package, Droplet, Circle } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 
@@ -14,10 +14,27 @@ interface SaleCardProps {
 }
 
 export default function SaleCard({ sale, onMarkAsCharged }: SaleCardProps) {
-    if (sale.type !== 'Membership' || !sale.customerName) return null;
+  const isMembership = sale.type === 'Membership';
+  const name = isMembership ? sale.customerName : sale.name;
+  if (!name) return null;
 
   const formattedTime = new Date(sale.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-  const initials = sale.customerName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  
+  const getInitials = () => {
+    if (isMembership && sale.customerName) {
+        return sale.customerName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    }
+    if (sale.name === 'Water Bottle') return 'WB';
+    if (sale.name === 'Snack') return 'SN';
+    return 'Q';
+  }
+  
+  const getIcon = () => {
+      if(isMembership) return <Dumbbell className="mr-2 h-4 w-4" />;
+      if(sale.name === 'Water Bottle') return <Droplet className="mr-2 h-4 w-4" />;
+      if(sale.name === 'Snack') return <Package className="mr-2 h-4 w-4" />;
+      return null;
+  }
 
   return (
     <Card className={`w-full shadow-sm transition-all duration-300 border-l-4 ${sale.charged ? 'border-success' : 'border-destructive'}`}>
@@ -25,27 +42,27 @@ export default function SaleCard({ sale, onMarkAsCharged }: SaleCardProps) {
         <div className="flex items-start justify-between">
             <div className='flex-1 flex items-center'>
                  <Avatar className="h-10 w-10 mr-4">
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{initials}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{getInitials()}</AvatarFallback>
                  </Avatar>
                  <div>
                     <h3 className="font-bold text-lg text-foreground">
-                        {sale.customerName}
+                        {name}
                     </h3>
                     <p className="text-sm text-muted-foreground -mt-1 flex items-center">
-                        <Dumbbell className="mr-2 h-4 w-4" />
-                        {sale.membershipType}
+                        {getIcon()}
+                        {isMembership ? sale.membershipType : sale.type}
                     </p>
                  </div>
             </div>
             <div className="ml-4">
                 <Button 
-                    variant={sale.charged ? 'ghost' : 'default'}
+                    variant={sale.charged ? 'ghost' : 'destructive'}
                     size="sm"
-                    className={`rounded-full transition-colors ${sale.charged ? 'text-success' : 'bg-destructive text-destructive-foreground hover:bg-destructive/90'}`}
+                    className={`rounded-full transition-colors ${sale.charged ? 'text-success' : ''}`}
                     onClick={() => !sale.charged && onMarkAsCharged(sale.id)}
                     disabled={sale.charged}
                 >
-                {sale.charged ? <CheckCircle2 className="mr-2 h-5 w-5"/> : <AlertCircle className="mr-2 h-5 w-5" />}
+                {sale.charged ? <CheckCircle2 className="mr-2 h-5 w-5"/> : <Circle className="mr-2 h-5 w-5" />}
                 {sale.charged ? 'Charged' : 'Charge'}
                 </Button>
             </div>

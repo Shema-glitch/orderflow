@@ -38,7 +38,7 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: Sale
       type: 'Quick Sale',
       name,
       quantity: 1,
-      charged: true, // Quick sales are charged immediately
+      charged: false, // Quick sales are now uncharged by default
     });
   };
 

@@ -132,7 +132,6 @@ export default function Home() {
       timestamp: new Date().toISOString(),
     }
     setSales(prevSales => [newSale, ...prevSales]);
-    setShowNewEntry(false);
     toast({
       title: "Sale Logged",
       description: `${sale.type === 'Membership' ? sale.membershipType : sale.name} sale logged.`
@@ -214,12 +213,12 @@ export default function Home() {
     return (
       <div className="fixed inset-0 bg-background z-[100] p-4 flex flex-col">
         <header className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-primary">{editingOrder ? 'Edit Order' : 'New Entry'}</h1>
+          <h1 className="text-2xl font-bold text-primary">{editingOrder ? 'Edit Order' : 'New Order'}</h1>
           <Button variant="ghost" size="icon" onClick={closeNewEntryScreen}>
             <X className="h-6 w-6"/>
           </Button>
         </header>
-        <NewOrderScreen menu={menu} onSaveOrder={handleSaveOrder} onSaveSale={handleSaveSale} editingOrder={editingOrder} />
+        <NewOrderScreen menu={menu} onSaveOrder={handleSaveOrder} editingOrder={editingOrder} />
       </div>
     )
   }
@@ -265,7 +264,7 @@ export default function Home() {
             size="lg"
             className="fixed bottom-24 right-6 h-16 w-16 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground z-50"
             onClick={() => setShowNewEntry(true)}
-            aria-label="Create New Entry"
+            aria-label="Create New Order"
           >
             <Plus className="h-8 w-8" />
           </Button>
