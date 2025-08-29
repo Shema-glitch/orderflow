@@ -9,22 +9,17 @@ export const menu: Menu = {
         { 
           id: 'milk', 
           name: 'Milk Type', 
-          items: ['Whole Milk', 'Skim Milk', 'Oat Milk', 'Almond Milk', 'Soy Milk'] 
+          items: ['Almond Milk', 'Soya Milk', 'Low Fat Milk', 'Full Fat Milk'] 
         },
         { 
           id: 'protein', 
-          name: 'Protein Powder', 
-          items: ['Whey', 'Casein', 'Soy', 'Pea', 'Hemp'] 
+          name: 'Protein Flavor', 
+          items: ['Vanilla Ice Cream', 'Double-Rich Chocolate'] 
         },
         { 
-          id: 'fruits', 
-          name: 'Fruits', 
-          items: ['Banana', 'Strawberry', 'Blueberry', 'Mango', 'Pineapple'] 
-        },
-        { 
-          id: 'boosts', 
-          name: 'Boosts', 
-          items: ['Spinach', 'Kale', 'Chia Seeds', 'Flax Seeds', 'Peanut Butter'] 
+          id: 'toppings', 
+          name: 'Toppings', 
+          items: ['Frozen Watermelon', 'Frozen Mango', 'Frozen Berries', 'Frozen Banana', 'Peanut Butter', 'Oats', 'Flax Seeds', 'Chia Seeds'] 
         },
       ],
     },
