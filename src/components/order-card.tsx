@@ -6,7 +6,8 @@ import type { Order } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Clock, Trash2, Edit, MoreVertical } from 'lucide-react';
+import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Clock, Trash2, Edit, MoreVertical, AlertTriangle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +41,11 @@ export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder, onEdi
 
   const formattedTime = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   const initials = order.customerName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  
+  const hasExtraToppings = 
+    order.items.category === 'Protein Shake' && 
+    order.items.selections['Toppings'] && 
+    order.items.selections['Toppings'].length > 2;
 
   return (
     <Card className={`w-full shadow-sm transition-all duration-500 border-l-4 ${order.charged ? 'border-success' : 'border-destructive'}`}>
@@ -128,9 +134,15 @@ export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder, onEdi
              </div>
            )}
 
-            <div className="flex items-center pt-1">
-                <Clock className="mr-3 h-4 w-4 text-primary/80"/>
+            <div className="flex items-center pt-1 gap-2">
+                <Clock className="mr-1 h-4 w-4 text-primary/80"/>
                 <span className="text-xs font-mono bg-muted px-2 py-1 rounded-md">{formattedTime}</span>
+                {hasExtraToppings && (
+                    <Badge variant="destructive" className="flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        Additional Cost
+                    </Badge>
+                )}
             </div>
         </div>
         
@@ -138,3 +150,4 @@ export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder, onEdi
     </Card>
   );
 }
+
