@@ -13,6 +13,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
@@ -40,7 +41,6 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
   if (!order.items) {
     return null;
   }
-  const [isUnchargeAlertOpen, setIsUnchargeAlertOpen] = useState(false);
 
   const formattedTime = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   const initials = order.customerName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -49,20 +49,6 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
     order.items.category === 'Protein Shake' && 
     order.items.selections['Toppings'] && 
     order.items.selections['Toppings'].length > 2;
-    
-  const handleChargeClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!order.charged) {
-        onMarkAsCharged(order.id);
-    } else {
-        setIsUnchargeAlertOpen(true);
-    }
-  }
-
-  const handleConfirmUncharge = () => {
-    onUnchargeOrder(order.id);
-    setIsUnchargeAlertOpen(false);
-  }
 
   return (
     <Card 
@@ -84,13 +70,14 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
             </div>
             <div className="flex items-center space-x-1" onClick={e => e.stopPropagation()}>
                 <Button 
-                    variant={order.charged ? 'outline' : 'destructive'}
+                    variant={order.charged ? 'ghost' : 'destructive'}
                     size="sm"
-                    className="rounded-full transition-colors"
-                    onClick={handleChargeClick}
+                    className={`rounded-full transition-colors ${order.charged ? 'text-success' : ''}`}
+                    onClick={() => !order.charged && onMarkAsCharged(order.id)}
+                    disabled={order.charged}
                 >
-                {order.charged ? <RefreshCw className="mr-2 h-4 w-4"/> : <Circle className="mr-2 h-5 w-5" />}
-                {order.charged ? 'Uncharge' : 'Charge'}
+                {order.charged ? <CheckCircle2 className="mr-2 h-5 w-5"/> : <Circle className="mr-2 h-5 w-5" />}
+                {order.charged ? 'Charged' : 'Charge'}
                 </Button>
 
                  <AlertDialog>
@@ -105,6 +92,15 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
                             <Edit className="mr-2 h-4 w-4" />
                             <span>Edit</span>
                         </DropdownMenuItem>
+                         {order.charged && (
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem>
+                               <RefreshCw className="mr-2 h-4 w-4" />
+                               <span>Uncharge</span>
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                         )}
+                        <DropdownMenuSeparator />
                          <AlertDialogTrigger asChild>
                             <DropdownMenuItem className="text-destructive focus:text-destructive">
                                 <Trash2 className="mr-2 h-4 w-4" />
@@ -117,14 +113,20 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
                         <AlertDialogHeader>
                           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete this order.
+                            This action cannot be undone. You can either delete the order permanently or mark it as uncharged.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => onDeleteOrder(order.id)} className="bg-destructive hover:bg-destructive/90">
-                            Delete
-                          </AlertDialogAction>
+                          {order.charged ? (
+                             <AlertDialogAction onClick={() => onUnchargeOrder(order.id)}>
+                                Yes, Uncharge
+                            </AlertDialogAction>
+                          ) : (
+                             <AlertDialogAction onClick={() => onDeleteOrder(order.id)} className="bg-destructive hover:bg-destructive/90">
+                                Delete
+                            </AlertDialogAction>
+                          )}
                         </AlertDialogFooter>
                       </AlertDialogContent>
                  </AlertDialog>
@@ -166,24 +168,6 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
         </div>
         
       </CardContent>
-       <AlertDialog open={isUnchargeAlertOpen} onOpenChange={setIsUnchargeAlertOpen}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm Uncharge</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Are you sure you want to mark this order as uncharged?
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleConfirmUncharge}>
-                        Yes, Uncharge
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
     </Card>
   );
 }
-
-    
