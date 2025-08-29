@@ -8,11 +8,13 @@ import { ClipboardList } from 'lucide-react';
 interface AllOrdersScreenProps {
   orders: Order[];
   onMarkAsCharged: (orderId: string) => void;
+  onUnchargeOrder: (orderId: string) => void;
   onDeleteOrder: (orderId: string) => void;
   onEditOrder: (order: Order) => void;
+  onViewOrder: (order: Order) => void;
 }
 
-export default function AllOrdersScreen({ orders, onMarkAsCharged, onDeleteOrder, onEditOrder }: AllOrdersScreenProps) {
+export default function AllOrdersScreen({ orders, onMarkAsCharged, onUnchargeOrder, onDeleteOrder, onEditOrder, onViewOrder }: AllOrdersScreenProps) {
 
   return (
     <div className="w-full">
@@ -26,7 +28,7 @@ export default function AllOrdersScreen({ orders, onMarkAsCharged, onDeleteOrder
       {orders.length > 0 ? (
         <div className="space-y-4">
           {orders.map(order => (
-            <OrderCard key={order.id} order={order} onMarkAsCharged={onMarkAsCharged} onDeleteOrder={onDeleteOrder} onEditOrder={onEditOrder} />
+            <OrderCard key={order.id} order={order} onMarkAsCharged={onMarkAsCharged} onUnchargeOrder={onUnchargeOrder} onDeleteOrder={onDeleteOrder} onEditOrder={onEditOrder} onViewOrder={onViewOrder} />
           ))}
         </div>
       ) : (
@@ -39,3 +41,5 @@ export default function AllOrdersScreen({ orders, onMarkAsCharged, onDeleteOrder
     </div>
   );
 }
+
+    

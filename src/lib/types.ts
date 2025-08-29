@@ -52,4 +52,6 @@ export interface Sale {
   charged: boolean;
 }
 
-export type AppView = 'shift_closed' | 'new_order' | 'orders_list' | 'all_orders' | 'sales' | 'shift_summary';
+export type AppView = 'shift_closed' | 'new_order' | 'orders_list' | 'all_orders' | 'sales' | 'shift_summary' | 'order_detail';
+
+    

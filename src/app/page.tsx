@@ -19,6 +19,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { useAuth, signInWithGoogle, signOutUser } from '@/lib/auth';
 import type { User } from 'firebase/auth';
 import LoginScreen from '@/components/screens/login-screen';
+import OrderDetailScreen from '@/components/screens/order-detail-screen';
 
 
 export default function Home() {
@@ -29,6 +30,7 @@ export default function Home() {
   const [view, setView] = useState<AppView | 'loading'>('loading');
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const [theme, setTheme] = useState('light');
   const user = useAuth();
@@ -101,7 +103,7 @@ export default function Home() {
 
     if (editingOrder) {
       // Update existing order
-      setOrders(prevOrders => prevOrders.map(o => o.id === editingOrder.id ? {...o, ...orderData} : o));
+      setOrders(prevOrders => prevOrders.map(o => o.id === editingOrder.id ? {...o, ...orderData, id: editingOrder.id} : o));
       toast({
         title: "Order Updated!",
         description: `Changes to ${orderData.customerName}'s order have been saved.`,
@@ -141,6 +143,7 @@ export default function Home() {
 
   const handleEditOrder = (order: Order) => {
     setEditingOrder(order);
+    setViewingOrder(null); // Close detail view if open
     setShowNewEntry(true);
   };
 
@@ -150,10 +153,21 @@ export default function Home() {
         order.id === orderId ? { ...order, charged: true } : order
       )
     );
+     setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: true } : prev);
+  };
+  
+  const handleUnchargeOrder = (orderId: string) => {
+    setOrders(prevOrders =>
+      prevOrders.map(order =>
+        order.id === orderId ? { ...order, charged: false } : order
+      )
+    );
+    setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: false } : prev);
   };
 
   const handleDeleteOrder = (orderId: string) => {
     setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+    setViewingOrder(null);
     toast({
       title: "Order Deleted",
       description: "The order has been removed from your list.",
@@ -171,6 +185,10 @@ export default function Home() {
   const closeNewEntryScreen = () => {
     setShowNewEntry(false);
     setEditingOrder(null);
+  };
+
+  const handleViewOrder = (order: Order) => {
+    setViewingOrder(order);
   };
   
   const renderView = () => {
@@ -194,9 +212,9 @@ export default function Home() {
     
     switch (view) {
       case 'orders_list':
-        return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} />;
+        return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
       case 'all_orders':
-        return <AllOrdersScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} />;
+        return <AllOrdersScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
       case 'sales':
         return <SalesScreen sales={sales} onSaveSale={handleSaveSale} onMarkAsCharged={handleMarkSaleAsCharged}/>;
       case 'shift_summary':
@@ -223,6 +241,20 @@ export default function Home() {
       </div>
     )
   }
+
+  const renderOrderDetailScreen = () => {
+    if (!viewingOrder) return null;
+    return (
+      <OrderDetailScreen
+        order={viewingOrder}
+        onClose={() => setViewingOrder(null)}
+        onMarkAsCharged={handleMarkOrderAsCharged}
+        onUnchargeOrder={handleUnchargeOrder}
+        onDeleteOrder={handleDeleteOrder}
+        onEditOrder={handleEditOrder}
+      />
+    );
+  };
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground font-sans">
@@ -257,8 +289,9 @@ export default function Home() {
       </main>
       
       {showNewEntry && renderNewEntryScreen()}
+      {renderOrderDetailScreen()}
 
-      {user && shift.isOpen && !showNewEntry && (
+      {user && shift.isOpen && !showNewEntry && !viewingOrder && (
         <>
           <BottomNav activeView={view as AppView} setView={setView} />
           <Button
@@ -292,3 +325,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

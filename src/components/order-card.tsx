@@ -1,12 +1,12 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { Order } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Clock, Trash2, Edit, MoreVertical, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Clock, Trash2, Edit, MoreVertical, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -30,14 +30,17 @@ import {
 interface OrderCardProps {
   order: Order;
   onMarkAsCharged: (orderId: string) => void;
+  onUnchargeOrder: (orderId: string) => void;
   onDeleteOrder: (orderId: string) => void;
   onEditOrder: (order: Order) => void;
+  onViewOrder: (order: Order) => void;
 }
 
-export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder, onEditOrder }: OrderCardProps) {
+export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onDeleteOrder, onEditOrder, onViewOrder }: OrderCardProps) {
   if (!order.items) {
     return null;
   }
+  const [isUnchargeAlertOpen, setIsUnchargeAlertOpen] = useState(false);
 
   const formattedTime = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   const initials = order.customerName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -46,11 +49,28 @@ export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder, onEdi
     order.items.category === 'Protein Shake' && 
     order.items.selections['Toppings'] && 
     order.items.selections['Toppings'].length > 2;
+    
+  const handleChargeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!order.charged) {
+        onMarkAsCharged(order.id);
+    } else {
+        setIsUnchargeAlertOpen(true);
+    }
+  }
+
+  const handleConfirmUncharge = () => {
+    onUnchargeOrder(order.id);
+    setIsUnchargeAlertOpen(false);
+  }
 
   return (
-    <Card className={`w-full shadow-sm transition-all duration-500 border-l-4 ${order.charged ? 'border-success' : 'border-destructive'}`}>
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-start justify-between">
+    <Card 
+        className={`w-full shadow-sm transition-all duration-300 border-l-4 ${order.charged ? 'border-success' : 'border-destructive'} cursor-pointer hover:shadow-md`}
+        onClick={() => onViewOrder(order)}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between space-x-2">
             <div className='flex-1 flex items-center'>
                  <Avatar className="h-10 w-10 mr-4">
                     <AvatarFallback className="bg-primary/10 text-primary font-bold">{initials}</AvatarFallback>
@@ -62,22 +82,21 @@ export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder, onEdi
                     <p className="text-sm text-muted-foreground -mt-1">{order.items.category}</p>
                 </div>
             </div>
-            <div className="flex items-center ml-2">
+            <div className="flex items-center space-x-1" onClick={e => e.stopPropagation()}>
                 <Button 
-                    variant={order.charged ? 'ghost' : 'destructive'}
+                    variant={order.charged ? 'outline' : 'destructive'}
                     size="sm"
-                    className={`rounded-full transition-colors ${order.charged ? 'text-success' : ''}`}
-                    onClick={() => !order.charged && onMarkAsCharged(order.id)}
-                    disabled={order.charged}
+                    className="rounded-full transition-colors"
+                    onClick={handleChargeClick}
                 >
-                {order.charged ? <CheckCircle2 className="mr-2 h-5 w-5"/> : <Circle className="mr-2 h-5 w-5" />}
-                {order.charged ? 'Charged' : 'Charge'}
+                {order.charged ? <RefreshCw className="mr-2 h-4 w-4"/> : <Circle className="mr-2 h-5 w-5" />}
+                {order.charged ? 'Uncharge' : 'Charge'}
                 </Button>
 
                  <AlertDialog>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="ml-1">
+                        <Button variant="ghost" size="icon">
                           <MoreVertical className="h-5 w-5" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -112,7 +131,7 @@ export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder, onEdi
             </div>
         </div>
 
-        <div className="space-y-2 text-sm text-muted-foreground pl-1">
+        <div className="space-y-2 text-sm text-muted-foreground pl-1 mt-3">
            <div className="flex items-start">
                 <ShoppingBasket className="mr-3 mt-1 h-4 w-4 text-primary/80"/>
                 <div className='flex-1 flex flex-wrap'>
@@ -147,7 +166,24 @@ export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder, onEdi
         </div>
         
       </CardContent>
+       <AlertDialog open={isUnchargeAlertOpen} onOpenChange={setIsUnchargeAlertOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Uncharge</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Are you sure you want to mark this order as uncharged?
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleConfirmUncharge}>
+                        Yes, Uncharge
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </Card>
   );
 }
 
+    
