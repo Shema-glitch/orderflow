@@ -1,11 +1,12 @@
 
 "use client";
 
+import { useState, useEffect } from 'react';
 import type { Order } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Clock, Trash2, Edit, MoreVertical, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Clock, Trash2, Edit, MoreVertical } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +34,35 @@ interface OrderCardProps {
 }
 
 export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder, onEditOrder }: OrderCardProps) {
+  const [animationClass, setAnimationClass] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
+  useEffect(() => {
+    if (!isMounted) return;
+
+    if (order.charged) {
+      setAnimationClass('animate-charge');
+    } else {
+       // Only animate new uncharged items, not all of them on load
+      const isNew = (new Date().getTime() - new Date(order.timestamp).getTime()) < 2000;
+      if (isNew) {
+        setAnimationClass('animate-new-item');
+      }
+    }
+    
+    // Reset animation class after it has played
+    const timer = setTimeout(() => {
+      setAnimationClass('');
+    }, 1500); // Animation duration is 1.5s
+
+    return () => clearTimeout(timer);
+  }, [order.charged, isMounted, order.timestamp]);
+
+
   if (!order.items) {
     return null;
   }
@@ -41,7 +71,7 @@ export default function OrderCard({ order, onMarkAsCharged, onDeleteOrder, onEdi
   const initials = order.customerName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
   return (
-    <Card className={`w-full shadow-sm transition-all duration-300 border-l-4 ${order.charged ? 'border-success' : 'border-destructive'}`}>
+    <Card className={`w-full shadow-sm transition-all duration-300 border-l-4 ${order.charged ? 'border-success' : 'border-destructive'} ${animationClass}`}>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between">
             <div className='flex-1 flex items-center'>

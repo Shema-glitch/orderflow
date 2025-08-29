@@ -72,3 +72,42 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .animate-charge {
+    animation: animate-charge 1.5s ease-out forwards;
+  }
+  .animate-new-item {
+    animation: animate-new-item 1.5s ease-out forwards;
+  }
+}
+
+@keyframes animate-charge {
+  0% {
+    background-color: hsla(var(--success), 0.2);
+    transform: scale(1);
+  }
+  50% {
+    background-color: hsla(var(--success), 0.1);
+    transform: scale(1.01);
+  }
+  100% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+}
+
+@keyframes animate-new-item {
+  0% {
+    background-color: hsla(var(--destructive), 0.15);
+    transform: scale(1);
+  }
+  50% {
+    background-color: hsla(var(--destructive), 0.05);
+    transform: scale(1.01);
+  }
+  100% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+}

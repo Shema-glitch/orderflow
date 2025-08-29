@@ -87,10 +87,22 @@ export default {
             height: '0',
           },
         },
+        'animate-charge': {
+          '0%': { backgroundColor: 'hsla(var(--success), 0.2)', transform: 'scale(1)' },
+          '50%': { backgroundColor: 'hsla(var(--success), 0.1)', transform: 'scale(1.01)' },
+          '100%': { backgroundColor: 'transparent', transform: 'scale(1)' },
+        },
+        'animate-new-item': {
+          '0%': { backgroundColor: 'hsla(var(--destructive), 0.15)', transform: 'scale(1)' },
+          '50%': { backgroundColor: 'hsla(var(--destructive), 0.05)', transform: 'scale(1.01)' },
+          '100%': { backgroundColor: 'transparent', transform: 'scale(1)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'charge': 'animate-charge 1.5s ease-out forwards',
+        'new-item': 'animate-new-item 1.5s ease-out forwards',
       },
     },
   },
