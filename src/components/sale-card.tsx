@@ -15,34 +15,6 @@ interface SaleCardProps {
 }
 
 export default function SaleCard({ sale, onMarkAsCharged }: SaleCardProps) {
-  const [animationClass, setAnimationClass] = useState('');
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-  
-  useEffect(() => {
-    if (!isMounted) return;
-
-    if (sale.charged) {
-      setAnimationClass('animate-charge');
-    } else {
-       // Only animate new uncharged items, not all of them on load
-      const isNew = (new Date().getTime() - new Date(sale.timestamp).getTime()) < 2000;
-      if (isNew) {
-        setAnimationClass('animate-new-item');
-      }
-    }
-    
-    const timer = setTimeout(() => {
-      setAnimationClass('');
-    }, 1500); // Animation duration is 1.5s
-
-    return () => clearTimeout(timer);
-  }, [sale.charged, isMounted, sale.timestamp]);
-
-
   const isMembership = sale.type === 'Membership';
   const name = isMembership ? sale.customerName : sale.name;
   if (!name) return null;
@@ -66,7 +38,7 @@ export default function SaleCard({ sale, onMarkAsCharged }: SaleCardProps) {
   }
 
   return (
-    <Card className={`w-full shadow-sm transition-all duration-300 border-l-4 ${sale.charged ? 'border-success' : 'border-destructive'} ${animationClass}`}>
+    <Card className={`w-full shadow-sm transition-all duration-500 border-l-4 ${sale.charged ? 'border-success' : 'border-destructive'}`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
             <div className='flex-1 flex items-center'>
