@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Package, Receipt, Droplet, User, Save, Dumbbell, CreditCard, Clock, ChevronDown } from 'lucide-react';
 import SaleCard from '@/components/sale-card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-
+import { motion } from 'framer-motion';
 
 interface SalesScreenProps {
   sales: Sale[];
@@ -31,6 +31,29 @@ const quickSaleItems: QuickSaleItem[] = [
   { name: 'Water Bottle', icon: Droplet },
   { name: 'Snack', icon: Package },
 ];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 14,
+    },
+  },
+};
 
 export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged, onEditSale, onDeleteSale }: SalesScreenProps) {
   const [customerName, setCustomerName] = useState('');
@@ -149,11 +172,18 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged, onEdit
             <h2 className="text-2xl font-bold">Sales Log</h2>
         </div>
         {sales.length > 0 ? (
-          <div className="space-y-4">
+          <motion.div 
+            className="space-y-4"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {sales.map(sale => (
-                <SaleCard key={sale.id} sale={sale} onMarkAsCharged={onMarkAsCharged} onEdit={onEditSale} onDelete={onDeleteSale} />
+                <motion.div key={sale.id} variants={itemVariants}>
+                    <SaleCard key={sale.id} sale={sale} onMarkAsCharged={onMarkAsCharged} onEdit={onEditSale} onDelete={onDeleteSale} />
+                </motion.div>
             ))}
-          </div>
+          </motion.div>
         ) : (
           <p className="text-muted-foreground text-center mt-4 border-2 border-dashed rounded-lg p-8">No sales logged yet.</p>
         )}
