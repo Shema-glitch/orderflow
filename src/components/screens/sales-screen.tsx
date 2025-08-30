@@ -18,7 +18,7 @@ import SaleCardSkeleton from '../sale-card-skeleton';
 interface SalesScreenProps {
   sales: Sale[];
   isLoading: boolean;
-  onSaveSale: (sale: Omit<Sale, 'id' | 'timestamp' | 'userId' | 'shiftId'>) => void;
+  onSaveSale: (sale: Omit<Sale, 'id' | 'timestamp' | 'userId' | 'shiftId' | 'charged'>) => void;
   onMarkAsCharged: (saleId: string) => void;
   onEditSale: (sale: Sale) => void;
   onDeleteSale: (saleId: string) => void;
@@ -67,8 +67,7 @@ export default function SalesScreen({ sales, isLoading, onSaveSale, onMarkAsChar
     onSaveSale({
       type: 'Quick Sale',
       name,
-      quantity: 1,
-      charged: false,
+      quantity: 1
     });
   };
 
@@ -81,8 +80,7 @@ export default function SalesScreen({ sales, isLoading, onSaveSale, onMarkAsChar
       type: 'Membership',
       customerName,
       membershipType: selectedMembership,
-      membershipDuration: selectedDuration,
-      charged: false,
+      membershipDuration: selectedDuration
     });
     // Reset form
     setCustomerName('');

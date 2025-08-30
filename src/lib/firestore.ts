@@ -18,8 +18,7 @@ import {
   limit,
   writeBatch,
   Timestamp,
-  enableIndexedDbPersistence,
-  collectionGroup
+  enableIndexedDbPersistence
 } from 'firebase/firestore';
 import type { Order, Sale, Shift } from './types';
 
@@ -91,10 +90,10 @@ export const closeShift = async (shiftId: string): Promise<void> => {
 
 // ORDER MANAGEMENT
 
-// Gets ALL uncharged orders for a specific user, regardless of shift
+// Gets ALL uncharged orders for a specific user from the top-level 'orders' collection.
 export const listenToAllUnchargedOrders = (userId: string, callback: (orders: Order[]) => void) => {
   const q = query(
-    collectionGroup(db, 'orders'), 
+    collection(db, 'orders'), 
     where('userId', '==', userId),
     where('charged', '==', false),
     orderBy('timestamp', 'desc')
@@ -109,9 +108,8 @@ export const listenToAllUnchargedOrders = (userId: string, callback: (orders: Or
 };
 
 export const addOrder = async (shiftId: string, userId: string, orderData: Omit<Order, 'id' | 'userId' | 'shiftId'>) => {
-  // Orders are now added to a top-level collection for easier querying
   const ordersRootCollection = collection(db, 'orders');
-  await addDoc(ordersRootCollection, {...orderData, userId, shiftId});
+  await addDoc(ordersRootCollection, {...orderData, userId, shiftId, charged: false, timestamp: serverTimestamp()});
 };
 
 export const updateOrder = async (orderId: string, updates: Partial<Omit<Order, 'id'>>) => {
@@ -127,7 +125,7 @@ export const deleteOrder = async (orderId: string) => {
 
 // SALE MANAGEMENT
 
-// Gets ALL uncharged sales for a specific user, regardless of shift
+// Gets ALL uncharged sales for a specific user from the top-level 'sales' collection.
 export const listenToAllUnchargedSales = (userId: string, callback: (sales: Sale[]) => void) => {
   const q = query(
     collection(db, 'sales'),
@@ -146,7 +144,7 @@ export const listenToAllUnchargedSales = (userId: string, callback: (sales: Sale
 
 export const addSale = async (shiftId: string, userId: string, saleData: Omit<Sale, 'id' | 'userId' | 'shiftId'>) => {
   const salesRootCollection = collection(db, 'sales');
-  await addDoc(salesRootCollection, {...saleData, userId, shiftId});
+  await addDoc(salesRootCollection, {...saleData, userId, shiftId, charged: false, timestamp: serverTimestamp()});
 };
 
 export const updateSale = async (saleId: string, updates: Partial<Omit<Sale, 'id'>>) => {

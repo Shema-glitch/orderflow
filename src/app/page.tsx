@@ -22,7 +22,6 @@ import LoginScreen from '@/components/screens/login-screen';
 import OrderDetailScreen from '@/components/screens/order-detail-screen';
 import { ToastAction } from "@/components/ui/toast"
 import { getCurrentShift, createShift, closeShift, listenToAllUnchargedOrders, addOrder, updateOrder, deleteOrder, listenToAllUnchargedSales, addSale, deleteSale, updateSale } from '@/lib/firestore';
-import { serverTimestamp } from 'firebase/firestore';
 
 
 export default function Home() {
@@ -92,18 +91,17 @@ export default function Home() {
     if (user) {
       setOrdersLoading(true);
       setSalesLoading(true);
-      // Now listening to ALL uncharged orders for the user
+      
       const unsubscribeOrders = listenToAllUnchargedOrders(user.uid, (loadedOrders) => {
         setOrders(loadedOrders);
         setOrdersLoading(false);
       });
-      // Now listening to ALL uncharged sales for the user
+      
       const unsubscribeSales = listenToAllUnchargedSales(user.uid, (loadedSales) => {
         setSales(loadedSales);
         setSalesLoading(false);
       });
       
-      // Cleanup listeners on component unmount or user change
       return () => {
         unsubscribeOrders();
         unsubscribeSales();
@@ -174,13 +172,7 @@ export default function Home() {
           description: `Changes to ${orderData.customerName}'s order have been saved.`,
         });
       } else {
-        // Create new order
-        const newOrderPayload = {
-          ...orderData,
-          charged: false,
-          timestamp: serverTimestamp(),
-        };
-        await addOrder(shift.id, user.uid, newOrderPayload);
+        await addOrder(shift.id, user.uid, orderData);
         toast({
           title: "Order Saved!",
           description: `Don't forget to mark it as 'Charged' once payment is received.`,
@@ -200,14 +192,10 @@ export default function Home() {
     }
   };
   
-  const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp' | 'userId' | 'shiftId'>) => {
+  const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp' | 'userId' | 'shiftId' | 'charged'>) => {
     if (!shift || !user) return;
     try {
-        const newSalePayload = {
-            ...sale,
-            timestamp: serverTimestamp(),
-        };
-        await addSale(shift.id, user.uid, newSalePayload);
+        await addSale(shift.id, user.uid, sale);
         toast({
             title: "Sale Logged",
             description: `${sale.type === 'Membership' ? sale.customerName : sale.name} sale logged.`
@@ -324,8 +312,6 @@ export default function Home() {
       return <ShiftScreen onOpenShift={handleOpenShift} />;
     }
     
-    // The "orders_list" view now shows all uncharged orders, which might span multiple shifts.
-    // The "all_orders" view needs to be rethought. For now, it will show the same as "orders_list".
     switch (view) {
       case 'orders_list':
         return <OrdersListScreen orders={orders} isLoading={ordersLoading} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
