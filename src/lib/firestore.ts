@@ -47,8 +47,6 @@ try {
 // SHIFT MANAGEMENT
 
 const shiftsCollection = collection(db, 'shifts');
-const ordersCollection = collectionGroup(db, 'orders');
-const salesCollection = collectionGroup(db, 'sales');
 
 
 export const getCurrentShift = async (userId: string): Promise<Shift | null> => {
@@ -96,7 +94,7 @@ export const closeShift = async (shiftId: string): Promise<void> => {
 // Gets ALL uncharged orders for a specific user, regardless of shift
 export const listenToAllUnchargedOrders = (userId: string, callback: (orders: Order[]) => void) => {
   const q = query(
-    ordersCollection, 
+    collectionGroup(db, 'orders'), 
     where('userId', '==', userId),
     where('charged', '==', false),
     orderBy('timestamp', 'desc')
@@ -131,7 +129,8 @@ export const deleteOrder = async (orderId: string) => {
 
 // Sales remain tied to a specific shift for now for simplicity.
 export const listenToSalesForShift = (shiftId: string, callback: (sales: Sale[]) => void) => {
-  const q = query(salesCollection, where('shiftId', '==', shiftId), orderBy('timestamp', 'desc'));
+  const salesForShiftCollection = collection(db, 'shifts', shiftId, 'sales');
+  const q = query(salesForShiftCollection, orderBy('timestamp', 'desc'));
   
   return onSnapshot(q, (querySnapshot) => {
     const sales = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Sale));

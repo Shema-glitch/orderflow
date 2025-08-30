@@ -86,19 +86,24 @@ export default function Home() {
 
   // Listen to orders and sales when a shift is active
   useEffect(() => {
-    if (shift && user) {
+    if (user) {
       // Now listening to ALL uncharged orders for the user
       const unsubscribeOrders = listenToAllUnchargedOrders(user.uid, setOrders);
-      // Sales are still tied to the current shift
-      const unsubscribeSales = listenToSalesForShift(shift.id, setSales);
       
-      // Cleanup listeners on component unmount or shift change
+      // Cleanup listeners on component unmount or user change
       return () => {
         unsubscribeOrders();
-        unsubscribeSales();
       };
     }
-  }, [shift, user]);
+  }, [user]);
+
+  // Listen to sales for the current shift
+  useEffect(() => {
+    if (shift) {
+        const unsubscribeSales = listenToSalesForShift(shift.id, setSales);
+        return () => unsubscribeSales();
+    }
+  }, [shift]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
@@ -116,7 +121,7 @@ export default function Home() {
     if (shift) {
       await closeShift(shift.id);
       setShift(null);
-      setOrders([]);
+      // Orders list will be cleared by the shift listener
       setSales([]);
       setEditingOrder(null);
       setView('shift_closed');
