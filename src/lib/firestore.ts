@@ -69,7 +69,7 @@ export const closeShift = async (shiftId: string): Promise<void> => {
 
 // ORDER MANAGEMENT
 
-export const listenToOrders = (shiftId: string, userId: string, callback: (orders: Order[]) => void) => {
+export const listenToOrders = (shiftId: string, callback: (orders: Order[]) => void) => {
   const ordersCollection = collection(db, 'shifts', shiftId, 'orders');
   // The security rules already enforce that a user can only access a shift they own,
   // so we don't need to query by userId here again.
@@ -101,7 +101,7 @@ export const deleteOrder = async (shiftId: string, orderId: string) => {
 
 // SALE MANAGEMENT
 
-export const listenToSales = (shiftId: string, userId: string, callback: (sales: Sale[]) => void) => {
+export const listenToSales = (shiftId: string, callback: (sales: Sale[]) => void) => {
   const salesCollection = collection(db, 'shifts', shiftId, 'sales');
   // The security rules already enforce that a user can only access a shift they own,
   // so we don't need to query by userId here again.
