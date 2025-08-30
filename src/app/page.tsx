@@ -21,7 +21,7 @@ import type { User } from 'firebase/auth';
 import LoginScreen from '@/components/screens/login-screen';
 import OrderDetailScreen from '@/components/screens/order-detail-screen';
 import { ToastAction } from "@/components/ui/toast"
-import { getCurrentShift, createShift, closeShift, listenToAllUnchargedOrders, addOrder, updateOrder, deleteOrder, listenToSalesForShift, addSale, deleteSale, updateSale } from '@/lib/firestore';
+import { getCurrentShift, createShift, closeShift, listenToAllUnchargedOrders, addOrder, updateOrder, deleteOrder, listenToAllUnchargedSales, addSale, deleteSale, updateSale } from '@/lib/firestore';
 import { serverTimestamp } from 'firebase/firestore';
 
 
@@ -89,21 +89,16 @@ export default function Home() {
     if (user) {
       // Now listening to ALL uncharged orders for the user
       const unsubscribeOrders = listenToAllUnchargedOrders(user.uid, setOrders);
+      // Now listening to ALL uncharged sales for the user
+      const unsubscribeSales = listenToAllUnchargedSales(user.uid, setSales);
       
       // Cleanup listeners on component unmount or user change
       return () => {
         unsubscribeOrders();
+        unsubscribeSales();
       };
     }
   }, [user]);
-
-  // Listen to sales for the current shift
-  useEffect(() => {
-    if (shift) {
-        const unsubscribeSales = listenToSalesForShift(shift.id, setSales);
-        return () => unsubscribeSales();
-    }
-  }, [shift]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));

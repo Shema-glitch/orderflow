@@ -127,16 +127,20 @@ export const deleteOrder = async (orderId: string) => {
 
 // SALE MANAGEMENT
 
-// Sales remain tied to a specific shift for now for simplicity.
-export const listenToSalesForShift = (shiftId: string, callback: (sales: Sale[]) => void) => {
-  const salesForShiftCollection = collection(db, 'shifts', shiftId, 'sales');
-  const q = query(salesForShiftCollection, orderBy('timestamp', 'desc'));
-  
+// Gets ALL uncharged sales for a specific user, regardless of shift
+export const listenToAllUnchargedSales = (userId: string, callback: (sales: Sale[]) => void) => {
+  const q = query(
+    collection(db, 'sales'),
+    where('userId', '==', userId),
+    where('charged', '==', false),
+    orderBy('timestamp', 'desc')
+  );
+
   return onSnapshot(q, (querySnapshot) => {
     const sales = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Sale));
     callback(sales);
   }, (error) => {
-    console.error("Error listening to sales:", error);
+    console.error("Error listening to all uncharged sales:", error);
   });
 };
 

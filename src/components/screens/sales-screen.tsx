@@ -9,14 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Package, Receipt, Droplet, User, Save, Dumbbell, CreditCard, Clock, ChevronDown } from 'lucide-react';
+import { Package, Receipt, Droplet, User, Save, Dumbbell, CreditCard, Clock, ChevronDown, ClipboardList } from 'lucide-react';
 import SaleCard from '@/components/sale-card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { motion } from 'framer-motion';
 
 interface SalesScreenProps {
   sales: Sale[];
-  onSaveSale: (sale: Omit<Sale, 'id' | 'timestamp' | 'userId'>) => void;
+  onSaveSale: (sale: Omit<Sale, 'id' | 'timestamp' | 'userId' | 'shiftId'>) => void;
   onMarkAsCharged: (saleId: string) => void;
   onEditSale: (sale: Sale) => void;
   onDeleteSale: (saleId: string) => void;
@@ -90,7 +90,6 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged, onEdit
   };
 
   const unchargedSales = sales.filter(s => !s.charged);
-  const chargedSales = sales.filter(s => s.charged);
 
 
   return (
@@ -169,23 +168,28 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged, onEdit
 
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Sales Log</h2>
+            <h2 className="text-2xl font-bold">Uncharged Sales</h2>
+             <span className="font-bold text-3xl text-destructive">{unchargedSales.length}</span>
         </div>
-        {sales.length > 0 ? (
+        {unchargedSales.length > 0 ? (
           <motion.div 
             className="space-y-4"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
           >
-            {sales.map(sale => (
+            {unchargedSales.map(sale => (
                 <motion.div key={sale.id} variants={itemVariants}>
                     <SaleCard key={sale.id} sale={sale} onMarkAsCharged={onMarkAsCharged} onEdit={onEditSale} onDelete={onDeleteSale} />
                 </motion.div>
             ))}
           </motion.div>
         ) : (
-          <p className="text-muted-foreground text-center mt-4 border-2 border-dashed rounded-lg p-8">No sales logged yet.</p>
+          <div className="flex flex-col items-center justify-center h-[20vh] text-center text-muted-foreground border-2 border-dashed rounded-lg p-4 bg-card">
+              <ClipboardList className="h-12 w-12 mb-4 text-gray-400" />
+              <h2 className="text-lg font-semibold text-foreground">No uncharged sales</h2>
+              <p className="max-w-xs mt-1 text-sm">When you log a new sale, it will appear here.</p>
+          </div>
         )}
       </div>
     </div>
