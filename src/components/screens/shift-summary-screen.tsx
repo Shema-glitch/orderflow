@@ -29,6 +29,7 @@ interface ShiftSummaryScreenProps {
 export default function ShiftSummaryScreen({ shift, orders, sales, onCloseShift }: ShiftSummaryScreenProps) {
   const [elapsedTime, setElapsedTime] = useState("");
   const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
+  const [isCloseConfirmationOpen, setIsCloseConfirmationOpen] = useState(false);
 
   useEffect(() => {
     if (!shift?.startTimestamp) return;
@@ -70,6 +71,7 @@ export default function ShiftSummaryScreen({ shift, orders, sales, onCloseShift 
   }
   
   const unchargedOrdersCount = orders.filter(o => !o.charged).length;
+  // For now, sales are still tied to the shift, so we check them directly.
   const unchargedSalesCount = sales.filter(s => !s.charged).length;
   const totalUncharged = unchargedOrdersCount + unchargedSalesCount;
 
@@ -77,10 +79,8 @@ export default function ShiftSummaryScreen({ shift, orders, sales, onCloseShift 
     if (totalUncharged > 0) {
       setIsWarningDialogOpen(true);
     } else {
-      // This will trigger the original confirmation dialog
-      return true;
+      setIsCloseConfirmationOpen(true);
     }
-    return false;
   }
 
   return (
@@ -113,22 +113,18 @@ export default function ShiftSummaryScreen({ shift, orders, sales, onCloseShift 
       </Card>
       
       <div className="mt-8">
-        <AlertDialog>
-            <AlertDialogTrigger asChild>
-                <Button
-                    size="lg"
-                    variant="destructive"
-                    className="w-full py-6 text-lg rounded-full shadow-lg"
-                    onClick={(e) => {
-                       if (!handleCloseAttempt()) {
-                           e.preventDefault();
-                       }
-                    }}
-                >
-                    <LogOut className="mr-3 h-6 w-6" />
-                    Close Shift
-                </Button>
-            </AlertDialogTrigger>
+        <Button
+            size="lg"
+            variant="destructive"
+            className="w-full py-6 text-lg rounded-full shadow-lg"
+            onClick={handleCloseAttempt}
+        >
+            <LogOut className="mr-3 h-6 w-6" />
+            Close Shift
+        </Button>
+
+        {/* Standard confirmation dialog */}
+        <AlertDialog open={isCloseConfirmationOpen} onOpenChange={setIsCloseConfirmationOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle className="flex items-center">
@@ -136,18 +132,22 @@ export default function ShiftSummaryScreen({ shift, orders, sales, onCloseShift 
                         Are you sure you want to end your shift?
                     </AlertDialogTitle>
                     <AlertDialogDescription>
-                        Closing the shift will clear all current orders and sales data. This action cannot be undone.
+                        Closing the shift will clear the current session. Any uncharged orders will reappear when you start a new shift.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={onCloseShift} className="bg-destructive hover:bg-destructive/90">
+                    <AlertDialogAction onClick={() => {
+                        onCloseShift();
+                        setIsCloseConfirmationOpen(false);
+                    }} className="bg-destructive hover:bg-destructive/90">
                         Yes, Close Shift
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
 
+        {/* Warning dialog for uncharged items */}
          <AlertDialog open={isWarningDialogOpen} onOpenChange={setIsWarningDialogOpen}>
             <AlertDialogContent>
                 <AlertDialogHeader>
@@ -156,11 +156,17 @@ export default function ShiftSummaryScreen({ shift, orders, sales, onCloseShift 
                         Uncharged Items Pending
                     </AlertDialogTitle>
                     <AlertDialogDescription>
-                        You have {totalUncharged} uncharged item(s) ({unchargedOrdersCount} orders, {unchargedSalesCount} sales). Please charge all items before closing your shift.
+                        You have {totalUncharged} uncharged item(s). If you close the shift, these items will carry over to your next shift. Do you want to proceed?
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogAction onClick={() => setIsWarningDialogOpen(false)}>OK</AlertDialogAction>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => {
+                        onCloseShift();
+                        setIsWarningDialogOpen(false);
+                    }}>
+                        Close Shift Anyway
+                    </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
@@ -169,5 +175,3 @@ export default function ShiftSummaryScreen({ shift, orders, sales, onCloseShift 
     </div>
   );
 }
-
-    

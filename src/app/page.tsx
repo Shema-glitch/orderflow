@@ -21,7 +21,7 @@ import type { User } from 'firebase/auth';
 import LoginScreen from '@/components/screens/login-screen';
 import OrderDetailScreen from '@/components/screens/order-detail-screen';
 import { ToastAction } from "@/components/ui/toast"
-import { getCurrentShift, createShift, closeShift, listenToOrders, addOrder, updateOrder, deleteOrder, listenToSales, addSale, deleteSale, updateSale } from '@/lib/firestore';
+import { getCurrentShift, createShift, closeShift, listenToAllUnchargedOrders, addOrder, updateOrder, deleteOrder, listenToSalesForShift, addSale, deleteSale, updateSale } from '@/lib/firestore';
 import { serverTimestamp } from 'firebase/firestore';
 
 
@@ -87,8 +87,10 @@ export default function Home() {
   // Listen to orders and sales when a shift is active
   useEffect(() => {
     if (shift && user) {
-      const unsubscribeOrders = listenToOrders(shift.id, setOrders);
-      const unsubscribeSales = listenToSales(shift.id, setSales);
+      // Now listening to ALL uncharged orders for the user
+      const unsubscribeOrders = listenToAllUnchargedOrders(user.uid, setOrders);
+      // Sales are still tied to the current shift
+      const unsubscribeSales = listenToSalesForShift(shift.id, setSales);
       
       // Cleanup listeners on component unmount or shift change
       return () => {
@@ -121,7 +123,7 @@ export default function Home() {
     }
   };
 
-  const handleSaveOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'charged' | 'userId'>): Promise<boolean> => {
+  const handleSaveOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'charged' | 'userId' | 'shiftId'>): Promise<boolean> => {
      if (!shift || !user) {
         toast({
             variant: "destructive",
@@ -154,8 +156,8 @@ export default function Home() {
 
     try {
       if (editingOrder) {
-        // Update existing order
-        await updateOrder(shift.id, editingOrder.id, orderData);
+        // Update existing order - shiftId doesn't change
+        await updateOrder(editingOrder.id, orderData);
         toast({
           title: "Order Updated!",
           description: `Changes to ${orderData.customerName}'s order have been saved.`,
@@ -187,7 +189,7 @@ export default function Home() {
     }
   };
   
-  const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp' | 'userId'>) => {
+  const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp' | 'userId' | 'shiftId'>) => {
     if (!shift || !user) return;
     try {
         const newSalePayload = {
@@ -223,14 +225,11 @@ export default function Home() {
     const saleToDelete = sales.find(s => s.id === saleId);
     if (!saleToDelete) return;
 
-    const originalSales = [...sales]; // Keep for undo, though direct Firestore manipulation is better
     try {
-        await deleteSale(shift.id, saleId);
+        await deleteSale(saleId);
         toast({
             title: "Sale Deleted",
             description: `${saleToDelete.type === 'Membership' ? saleToDelete.customerName : saleToDelete.name} sale has been removed.`,
-            // TODO: Undo requires re-adding the document to Firestore, which is more complex.
-            // For now, we remove the direct undo action from the toast.
         });
     } catch (error) {
         toast({
@@ -250,9 +249,8 @@ export default function Home() {
   };
 
   const handleMarkOrderAsCharged = async (orderId: string) => {
-    if (!shift) return;
     try {
-      await updateOrder(shift.id, orderId, { charged: true });
+      await updateOrder(orderId, { charged: true });
       setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: true } : prev);
     } catch (error) {
       console.error("Error marking order as charged: ", error);
@@ -260,9 +258,8 @@ export default function Home() {
   };
   
   const handleUnchargeOrder = async (orderId: string) => {
-    if (!shift) return;
     try {
-      await updateOrder(shift.id, orderId, { charged: false });
+      await updateOrder(orderId, { charged: false });
       setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: false } : prev);
     } catch (error) {
        console.error("Error uncharging order: ", error);
@@ -270,9 +267,8 @@ export default function Home() {
   };
 
   const handleDeleteOrder = async (orderId: string) => {
-    if (!shift) return;
     try {
-      await deleteOrder(shift.id, orderId);
+      await deleteOrder(orderId);
       setViewingOrder(null);
       toast({
         title: "Order Deleted",
@@ -284,9 +280,8 @@ export default function Home() {
   };
 
   const handleMarkSaleAsCharged = async (saleId: string) => {
-    if (!shift) return;
     try {
-        await updateSale(shift.id, saleId, { charged: true });
+        await updateSale(saleId, { charged: true });
     } catch (error) {
         console.error("Error marking sale as charged: ", error);
     }
@@ -318,6 +313,8 @@ export default function Home() {
       return <ShiftScreen onOpenShift={handleOpenShift} />;
     }
     
+    // The "orders_list" view now shows all uncharged orders, which might span multiple shifts.
+    // The "all_orders" view needs to be rethought. For now, it will show the same as "orders_list".
     switch (view) {
       case 'orders_list':
         return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
@@ -437,5 +434,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
