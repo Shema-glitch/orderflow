@@ -2,14 +2,14 @@
 "use client";
 
 import { useState } from 'react';
-import type { Sale, MembershipType } from '@/lib/types';
-import { membershipTypes } from '@/lib/membership-data';
+import type { Sale, MembershipType, MembershipDuration } from '@/lib/types';
+import { membershipTypes, membershipDurations } from '@/lib/membership-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Package, Receipt, Droplet, User, Save, Dumbbell, CreditCard } from 'lucide-react';
+import { Package, Receipt, Droplet, User, Save, Dumbbell, CreditCard, Clock } from 'lucide-react';
 import SaleCard from '@/components/sale-card';
 
 
@@ -32,6 +32,7 @@ const quickSaleItems: QuickSaleItem[] = [
 export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: SalesScreenProps) {
   const [customerName, setCustomerName] = useState('');
   const [selectedMembership, setSelectedMembership] = useState<MembershipType | null>(null);
+  const [selectedDuration, setSelectedDuration] = useState<MembershipDuration | null>(null);
 
   const handleQuickSale = (name: string) => {
     onSaveSale({
@@ -43,19 +44,21 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: Sale
   };
 
   const handleSaveMembershipSale = () => {
-    if (!customerName || !selectedMembership) {
-      alert('Please enter a customer name and select a membership type.');
+    if (!customerName || !selectedMembership || !selectedDuration) {
+      alert('Please enter a customer name and select a membership type and duration.');
       return;
     }
     onSaveSale({
       type: 'Membership',
       customerName,
       membershipType: selectedMembership,
+      membershipDuration: selectedDuration,
       charged: false,
     });
     // Reset form
     setCustomerName('');
     setSelectedMembership(null);
+    setSelectedDuration(null);
   };
 
   const unchargedSales = sales.filter(s => !s.charged);
@@ -91,7 +94,17 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: Sale
                   ))}
                 </div>
               </div>
-              <Button onClick={handleSaveMembershipSale} className="w-full" disabled={!customerName || !selectedMembership}>
+               <div>
+                <Label className="text-base flex items-center"><Clock className="mr-2 h-4 w-4"/>Membership Duration</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {membershipDurations.map(duration => (
+                    <Button key={duration} variant={selectedDuration === duration ? 'default' : 'outline'} onClick={() => setSelectedDuration(duration)}>
+                      {duration}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <Button onClick={handleSaveMembershipSale} className="w-full" disabled={!customerName || !selectedMembership || !selectedDuration}>
                 <Save className="mr-2 h-4 w-4"/> Log Membership Sale
               </Button>
             </CardContent>

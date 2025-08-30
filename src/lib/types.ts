@@ -40,6 +40,7 @@ export interface Shift {
 
 export type SaleType = 'Quick Sale' | 'Membership';
 export type MembershipType = 'Semi-Private' | 'CrossFit' | 'PT' | 'Boxing' | '5-Class Pass';
+export type MembershipDuration = '1 Month' | '3 Months' | '1 Year';
 
 export interface Sale {
   id: string;
@@ -49,6 +50,7 @@ export interface Sale {
   quantity?: number;
   customerName?: string;
   membershipType?: MembershipType;
+  membershipDuration?: MembershipDuration;
   charged: boolean;
 }
 

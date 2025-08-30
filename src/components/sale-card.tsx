@@ -51,7 +51,7 @@ export default function SaleCard({ sale, onMarkAsCharged }: SaleCardProps) {
                     </h3>
                     <div className="text-sm text-muted-foreground -mt-1 flex items-center gap-2">
                         {getIcon()}
-                        <span>{isMembership ? sale.membershipType : sale.type}</span>
+                        <span>{isMembership ? `${sale.membershipType} - ${sale.membershipDuration}` : sale.type}</span>
                     </div>
                  </div>
             </div>

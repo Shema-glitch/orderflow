@@ -1,4 +1,4 @@
-import type { MembershipType } from './types';
+import type { MembershipType, MembershipDuration } from './types';
 
 export const membershipTypes: MembershipType[] = [
   'Semi-Private',
@@ -6,4 +6,10 @@ export const membershipTypes: MembershipType[] = [
   'PT',
   'Boxing',
   '5-Class Pass',
+];
+
+export const membershipDurations: MembershipDuration[] = [
+  '1 Month',
+  '3 Months',
+  '1 Year',
 ];
