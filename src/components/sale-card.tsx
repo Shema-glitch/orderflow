@@ -38,15 +38,15 @@ export default function SaleCard({ sale, onMarkAsCharged }: SaleCardProps) {
   }
 
   return (
-    <Card className={`w-full shadow-sm transition-all duration-500 border-l-4 ${sale.charged ? 'border-success' : 'border-destructive'}`}>
+    <Card className={`w-full shadow-md transition-all duration-500 border-l-4 ${sale.charged ? 'border-success' : 'border-destructive'} dark:shadow-none dark:hover:bg-white/5`}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
-            <div className='flex-1 flex items-center'>
-                 <Avatar className="h-10 w-10 mr-4">
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{getInitials()}</AvatarFallback>
+            <div className='flex-1 flex items-center space-x-4'>
+                 <Avatar className="h-12 w-12">
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">{getInitials()}</AvatarFallback>
                  </Avatar>
                  <div>
-                    <h3 className="font-bold text-lg text-foreground">
+                    <h3 className="font-bold text-xl text-foreground">
                         {name}
                     </h3>
                     <p className="text-sm text-muted-foreground -mt-1 flex items-center">
@@ -69,7 +69,7 @@ export default function SaleCard({ sale, onMarkAsCharged }: SaleCardProps) {
             </div>
         </div>
 
-        <div className="flex items-center pt-3 text-sm text-muted-foreground pl-1">
+        <div className="flex items-center pt-4 text-sm text-muted-foreground pl-1">
             <Clock className="mr-3 h-4 w-4 text-primary/80"/>
              <span className="text-xs font-mono bg-muted px-2 py-1 rounded-md">{formattedTime}</span>
         </div>

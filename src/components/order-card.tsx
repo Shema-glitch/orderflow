@@ -52,121 +52,120 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
 
   return (
     <Card 
-        className={`w-full shadow-sm transition-all duration-300 border-l-4 ${order.charged ? 'border-success' : 'border-destructive'} cursor-pointer hover:shadow-md`}
+        className={`w-full shadow-md transition-all duration-300 border-l-4 ${order.charged ? 'border-success' : 'border-destructive'} cursor-pointer hover:shadow-lg dark:shadow-none dark:hover:bg-white/5`}
         onClick={() => onViewOrder(order)}
     >
       <CardContent className="p-4">
-        <div className="flex items-start justify-between space-x-2">
-            <div className='flex-1 flex items-center'>
-                 <Avatar className="h-10 w-10 mr-4">
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{initials}</AvatarFallback>
-                 </Avatar>
-                 <div>
-                    <h3 className="font-bold text-lg text-foreground">
-                        {order.customerName}
-                    </h3>
-                    <p className="text-sm text-muted-foreground -mt-1">{order.items.category}</p>
+        <div className="flex items-start justify-between space-x-4">
+          <div className="flex items-center space-x-4 flex-1">
+            <Avatar className="h-12 w-12">
+              <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">{initials}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-xl text-foreground">
+                    {order.customerName}
+                  </h3>
+                  <p className="text-sm text-muted-foreground -mt-1">{order.items.category}</p>
                 </div>
+                <div className="text-xs text-muted-foreground font-mono text-right pl-2">
+                  {formattedTime}
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-1" onClick={e => e.stopPropagation()}>
-                <Button 
-                    variant={order.charged ? 'ghost' : 'destructive'}
-                    size="sm"
-                    className={`rounded-full transition-colors ${order.charged ? 'text-success' : ''}`}
-                    onClick={() => !order.charged && onMarkAsCharged(order.id)}
-                    disabled={order.charged}
-                >
-                {order.charged ? <CheckCircle2 className="mr-2 h-5 w-5"/> : <Circle className="mr-2 h-5 w-5" />}
-                {order.charged ? 'Charged' : 'Charge'}
-                </Button>
+          </div>
 
-                 <AlertDialog>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="h-5 w-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEditOrder(order)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            <span>Edit</span>
-                        </DropdownMenuItem>
-                         {order.charged && (
-                          <AlertDialogTrigger asChild>
-                            <DropdownMenuItem>
-                               <RefreshCw className="mr-2 h-4 w-4" />
-                               <span>Uncharge</span>
-                            </DropdownMenuItem>
-                          </AlertDialogTrigger>
-                         )}
-                        <DropdownMenuSeparator />
-                         <AlertDialogTrigger asChild>
-                            <DropdownMenuItem className="text-destructive focus:text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>Delete</span>
-                            </DropdownMenuItem>
-                         </AlertDialogTrigger>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                     <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. You can either delete the order permanently or mark it as uncharged.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          {order.charged ? (
-                             <AlertDialogAction onClick={() => onUnchargeOrder(order.id)}>
-                                Yes, Uncharge
-                            </AlertDialogAction>
-                          ) : (
-                             <AlertDialogAction onClick={() => onDeleteOrder(order.id)} className="bg-destructive hover:bg-destructive/90">
-                                Delete
-                            </AlertDialogAction>
-                          )}
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                 </AlertDialog>
-            </div>
+          <div className="flex items-center" onClick={e => e.stopPropagation()}>
+            <AlertDialog>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onEditOrder(order)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    <span>Edit</span>
+                  </DropdownMenuItem>
+                  {order.charged ? (
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <span>Uncharge</span>
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                  ) : (
+                    <DropdownMenuItem onClick={() => onMarkAsCharged(order.id)}>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      <span>Mark as Charged</span>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem className="text-destructive focus:text-destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span>Delete</span>
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. Please confirm your choice.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  {order.charged ? (
+                    <AlertDialogAction onClick={() => onUnchargeOrder(order.id)}>
+                      Yes, Uncharge
+                    </AlertDialogAction>
+                  ) : (
+                    <AlertDialogAction onClick={() => onDeleteOrder(order.id)} className="bg-destructive hover:bg-destructive/90">
+                      Delete Order
+                    </AlertDialogAction>
+                  )}
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
-        <div className="space-y-2 text-sm text-muted-foreground pl-1 mt-3">
-           <div className="flex items-start">
-                <ShoppingBasket className="mr-3 mt-1 h-4 w-4 text-primary/80"/>
-                <div className='flex-1 flex flex-wrap'>
-                    {Object.entries(order.items.selections).map(([subcategory, items]) => (
-                         Array.isArray(items) && items.length > 0 && (
-                            <div key={subcategory} className="mr-4 mb-1">
-                               <span className="font-medium text-foreground/80">{subcategory}: </span>
-                               <span>{items.join(', ')}</span>
-                            </div>
-                         )
-                    ))}
-                </div>
-           </div>
-
-           {order.notes && (
-             <div className="flex items-start">
-                <MessageSquare className="mr-3 mt-0.5 h-4 w-4 text-primary/80"/>
-                <p className="flex-1 text-foreground/90 italic">"{order.notes}"</p>
-             </div>
-           )}
-
-            <div className="flex items-center pt-1 gap-2">
-                <Clock className="mr-1 h-4 w-4 text-primary/80"/>
-                <span className="text-xs font-mono bg-muted px-2 py-1 rounded-md">{formattedTime}</span>
-                {hasExtraToppings && (
-                    <Badge variant="destructive" className="flex items-center gap-1">
-                        <AlertTriangle className="h-3 w-3" />
-                        Additional Cost
-                    </Badge>
-                )}
+        <div className="space-y-3 text-sm text-muted-foreground mt-4 pl-1">
+          <div className="flex items-start">
+            <ShoppingBasket className="mr-3 mt-1 h-4 w-4 flex-shrink-0 text-primary/80"/>
+            <div className='flex-1 flex flex-wrap'>
+              {Object.entries(order.items.selections).map(([subcategory, items]) => (
+                Array.isArray(items) && items.length > 0 && (
+                  <div key={subcategory} className="mr-4 mb-1">
+                    <span className="font-semibold text-foreground/90">{subcategory}: </span>
+                    <span>{items.join(', ')}</span>
+                  </div>
+                )
+              ))}
             </div>
+          </div>
+
+          {order.notes && (
+            <div className="flex items-start">
+              <MessageSquare className="mr-3 mt-0.5 h-4 w-4 flex-shrink-0 text-primary/80"/>
+              <p className="flex-1 text-foreground/90 italic">"{order.notes}"</p>
+            </div>
+          )}
+
+          {hasExtraToppings && (
+            <div className="pt-1">
+              <Badge variant="destructive" className="flex items-center gap-1.5 w-fit">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                Additional Topping Cost
+              </Badge>
+            </div>
+          )}
         </div>
-        
       </CardContent>
     </Card>
   );
