@@ -50,6 +50,9 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
     order.items.selections['Toppings'] && 
     order.items.selections['Toppings'].length > 2;
 
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUncharging, setIsUncharging] = useState(false);
+
   return (
     <Card 
         className={`w-full shadow-md transition-all duration-300 border-l-4 ${order.charged ? 'border-success' : 'border-destructive'} cursor-pointer hover:shadow-lg dark:shadow-none dark:hover:bg-white/5`}
@@ -77,7 +80,7 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
           </div>
 
           <div className="flex items-center" onClick={e => e.stopPropagation()}>
-            <AlertDialog>
+            <AlertDialog open={isDeleting || isUncharging} onOpenChange={isUncharging ? setIsUncharging : setIsDeleting}>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -89,22 +92,17 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
                     <Edit className="mr-2 h-4 w-4" />
                     <span>Edit</span>
                   </DropdownMenuItem>
-                  {order.charged ? (
+                  {order.charged && (
                     <AlertDialogTrigger asChild>
-                      <DropdownMenuItem>
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        <span>Uncharge</span>
-                      </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setIsUncharging(true)}>
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            <span>Uncharge</span>
+                        </DropdownMenuItem>
                     </AlertDialogTrigger>
-                  ) : (
-                    <DropdownMenuItem onClick={() => onMarkAsCharged(order.id)}>
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      <span>Mark as Charged</span>
-                    </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   <AlertDialogTrigger asChild>
-                    <DropdownMenuItem className="text-destructive focus:text-destructive">
+                    <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setIsDeleting(true)}>
                       <Trash2 className="mr-2 h-4 w-4" />
                       <span>Delete</span>
                     </DropdownMenuItem>
@@ -115,20 +113,17 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. Please confirm your choice.
+                    {isDeleting ? "This action cannot be undone. This will permanently delete this order." : "Please confirm you want to mark this order as uncharged."}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  {order.charged ? (
-                    <AlertDialogAction onClick={() => onUnchargeOrder(order.id)}>
-                      Yes, Uncharge
-                    </AlertDialogAction>
-                  ) : (
-                    <AlertDialogAction onClick={() => onDeleteOrder(order.id)} className="bg-destructive hover:bg-destructive/90">
-                      Delete Order
-                    </AlertDialogAction>
-                  )}
+                  <AlertDialogAction onClick={() => {
+                      if (isDeleting) onDeleteOrder(order.id);
+                      if (isUncharging) onUnchargeOrder(order.id);
+                  }} className={isDeleting ? 'bg-destructive hover:bg-destructive/90' : ''}>
+                      {isDeleting ? 'Yes, Delete' : 'Yes, Uncharge'}
+                  </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -136,19 +131,21 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
         </div>
 
         <div className="space-y-3 text-sm text-muted-foreground mt-4 pl-1">
-          <div className="flex items-start">
-            <ShoppingBasket className="mr-3 mt-1 h-4 w-4 flex-shrink-0 text-primary/80"/>
-            <div className='flex-1 flex flex-wrap'>
-              {Object.entries(order.items.selections).map(([subcategory, items]) => (
-                Array.isArray(items) && items.length > 0 && (
-                  <div key={subcategory} className="mr-4 mb-1">
-                    <span className="font-semibold text-foreground/90">{subcategory}: </span>
-                    <span>{items.join(', ')}</span>
-                  </div>
-                )
-              ))}
-            </div>
-          </div>
+           {Object.entries(order.items.selections).some(([_, items]) => Array.isArray(items) && items.length > 0) &&
+              <div className="flex items-start">
+                <ShoppingBasket className="mr-3 mt-1 h-4 w-4 flex-shrink-0 text-primary/80"/>
+                <div className='flex-1 flex flex-wrap'>
+                  {Object.entries(order.items.selections).map(([subcategory, items]) => (
+                    Array.isArray(items) && items.length > 0 && (
+                      <div key={subcategory} className="mr-4 mb-1">
+                        <span className="font-semibold text-foreground/90">{subcategory}: </span>
+                        <span>{items.join(', ')}</span>
+                      </div>
+                    )
+                  ))}
+                </div>
+              </div>
+            }
 
           {order.notes && (
             <div className="flex items-start">
@@ -166,6 +163,21 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
             </div>
           )}
         </div>
+        
+        <div className="mt-4 flex justify-end" onClick={e => e.stopPropagation()}>
+            {order.charged ? (
+                <Button variant="ghost" size="sm" className="text-success pointer-events-none">
+                    <CheckCircle2 className="mr-2 h-5 w-5"/>
+                    Charged
+                </Button>
+            ) : (
+                <Button size="sm" onClick={() => onMarkAsCharged(order.id)}>
+                    <Circle className="mr-2 h-5 w-5"/>
+                    Charge
+                </Button>
+            )}
+        </div>
+
       </CardContent>
     </Card>
   );
