@@ -21,7 +21,7 @@ import type { User } from 'firebase/auth';
 import LoginScreen from '@/components/screens/login-screen';
 import OrderDetailScreen from '@/components/screens/order-detail-screen';
 import { ToastAction } from "@/components/ui/toast"
-import { getCurrentShift, createShift, closeShift, listenToAllUnchargedOrders, addOrder, updateOrder, deleteOrder, listenToAllUnchargedSales, addSale, deleteSale, updateSale } from '@/lib/firestore';
+import { getCurrentShift, createShift, closeShift, listenToOrders, addOrder, updateOrder, deleteOrder, listenToSales, addSale, deleteSale, updateSale } from '@/lib/firestore';
 
 
 export default function Home() {
@@ -86,18 +86,18 @@ export default function Home() {
   }, [user, authLoading]);
 
 
-  // Listen to orders and sales when a user is logged in
+  // Listen to orders and sales when a shift is active
   useEffect(() => {
-    if (user) {
+    if (shift) {
       setOrdersLoading(true);
       setSalesLoading(true);
-      
-      const unsubscribeOrders = listenToAllUnchargedOrders(user.uid, (loadedOrders) => {
+
+      const unsubscribeOrders = listenToOrders(shift.id, (loadedOrders) => {
         setOrders(loadedOrders);
         setOrdersLoading(false);
       });
       
-      const unsubscribeSales = listenToAllUnchargedSales(user.uid, (loadedSales) => {
+      const unsubscribeSales = listenToSales(shift.id, (loadedSales) => {
         setSales(loadedSales);
         setSalesLoading(false);
       });
@@ -106,8 +106,12 @@ export default function Home() {
         unsubscribeOrders();
         unsubscribeSales();
       };
+    } else {
+      // If no shift, clear orders and sales
+      setOrders([]);
+      setSales([]);
     }
-  }, [user]);
+  }, [shift]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
@@ -121,7 +125,7 @@ export default function Home() {
     }
   };
 
-  const handleCloseShift = async () => {
+  const handleCloseShift = async (force = false) => {
     if (shift) {
       await closeShift(shift.id);
       setShift(null);
@@ -132,7 +136,7 @@ export default function Home() {
     }
   };
 
-  const handleSaveOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'charged' | 'userId' | 'shiftId'>): Promise<boolean> => {
+  const handleSaveOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'charged' | 'shiftId'>): Promise<boolean> => {
      if (!shift || !user) {
         toast({
             variant: "destructive",
@@ -165,14 +169,14 @@ export default function Home() {
 
     try {
       if (editingOrder) {
-        // Update existing order - shiftId doesn't change
-        await updateOrder(editingOrder.id, orderData);
+        // Update existing order
+        await updateOrder(shift.id, editingOrder.id, orderData);
         toast({
           title: "Order Updated!",
           description: `Changes to ${orderData.customerName}'s order have been saved.`,
         });
       } else {
-        await addOrder(shift.id, user.uid, orderData);
+        await addOrder(shift.id, orderData);
         toast({
           title: "Order Saved!",
           description: `Don't forget to mark it as 'Charged' once payment is received.`,
@@ -192,10 +196,10 @@ export default function Home() {
     }
   };
   
-  const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp' | 'userId' | 'shiftId' | 'charged'>) => {
+  const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp' | 'shiftId' | 'charged'>) => {
     if (!shift || !user) return;
     try {
-        await addSale(shift.id, user.uid, sale);
+        await addSale(shift.id, sale);
         toast({
             title: "Sale Logged",
             description: `${sale.type === 'Membership' ? sale.customerName : sale.name} sale logged.`
@@ -225,7 +229,7 @@ export default function Home() {
     if (!saleToDelete) return;
 
     try {
-        await deleteSale(saleId);
+        await deleteSale(shift.id, saleId);
         toast({
             title: "Sale Deleted",
             description: `${saleToDelete.type === 'Membership' ? saleToDelete.customerName : saleToDelete.name} sale has been removed.`,
@@ -248,8 +252,9 @@ export default function Home() {
   };
 
   const handleMarkOrderAsCharged = async (orderId: string) => {
+    if (!shift) return;
     try {
-      await updateOrder(orderId, { charged: true });
+      await updateOrder(shift.id, orderId, { charged: true });
       setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: true } : prev);
     } catch (error) {
       console.error("Error marking order as charged: ", error);
@@ -257,8 +262,9 @@ export default function Home() {
   };
   
   const handleUnchargeOrder = async (orderId: string) => {
+    if (!shift) return;
     try {
-      await updateOrder(orderId, { charged: false });
+      await updateOrder(shift.id, orderId, { charged: false });
       setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: false } : prev);
     } catch (error) {
        console.error("Error uncharging order: ", error);
@@ -266,8 +272,9 @@ export default function Home() {
   };
 
   const handleDeleteOrder = async (orderId: string) => {
+    if (!shift) return;
     try {
-      await deleteOrder(orderId);
+      await deleteOrder(shift.id, orderId);
       setViewingOrder(null);
       toast({
         title: "Order Deleted",
@@ -279,8 +286,9 @@ export default function Home() {
   };
 
   const handleMarkSaleAsCharged = async (saleId: string) => {
+    if (!shift) return;
     try {
-        await updateSale(saleId, { charged: true });
+        await updateSale(shift.id, saleId, { charged: true });
     } catch (error) {
         console.error("Error marking sale as charged: ", error);
     }

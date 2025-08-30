@@ -47,7 +47,6 @@ try {
 
 const shiftsCollection = collection(db, 'shifts');
 
-
 export const getCurrentShift = async (userId: string): Promise<Shift | null> => {
   try {
     const q = query(shiftsCollection, where('userId', '==', userId), where('isOpen', '==', true), limit(1));
@@ -89,70 +88,58 @@ export const closeShift = async (shiftId: string): Promise<void> => {
 
 
 // ORDER MANAGEMENT
-
-// Gets ALL uncharged orders for a specific user from the top-level 'orders' collection.
-export const listenToAllUnchargedOrders = (userId: string, callback: (orders: Order[]) => void) => {
-  const q = query(
-    collection(db, 'orders'), 
-    where('userId', '==', userId),
-    where('charged', '==', false),
-    orderBy('timestamp', 'desc')
-  );
+export const listenToOrders = (shiftId: string, callback: (orders: Order[]) => void) => {
+  const ordersCollection = collection(db, 'shifts', shiftId, 'orders');
+  const q = query(ordersCollection, orderBy('timestamp', 'desc'));
   
   return onSnapshot(q, (querySnapshot) => {
     const orders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
     callback(orders);
   }, (error) => {
-    console.error("Error listening to all uncharged orders:", error);
+    console.error("Error listening to orders:", error);
   });
 };
 
-export const addOrder = async (shiftId: string, userId: string, orderData: Omit<Order, 'id' | 'userId' | 'shiftId'>) => {
-  const ordersRootCollection = collection(db, 'orders');
-  await addDoc(ordersRootCollection, {...orderData, userId, shiftId, charged: false, timestamp: serverTimestamp()});
+export const addOrder = async (shiftId: string, orderData: Omit<Order, 'id' | 'shiftId'>) => {
+  const ordersCollection = collection(db, 'shifts', shiftId, 'orders');
+  await addDoc(ordersCollection, {...orderData, charged: false, timestamp: serverTimestamp()});
 };
 
-export const updateOrder = async (orderId: string, updates: Partial<Omit<Order, 'id'>>) => {
-  const orderRef = doc(db, 'orders', orderId);
+export const updateOrder = async (shiftId: string, orderId: string, updates: Partial<Omit<Order, 'id' | 'shiftId'>>) => {
+  const orderRef = doc(db, 'shifts', shiftId, 'orders', orderId);
   await updateDoc(orderRef, updates);
 };
 
-export const deleteOrder = async (orderId: string) => {
-  const orderRef = doc(db, 'orders', orderId);
+export const deleteOrder = async (shiftId: string, orderId: string) => {
+  const orderRef = doc(db, 'shifts', shiftId, 'orders', orderId);
   await deleteDoc(orderRef);
 };
 
 
 // SALE MANAGEMENT
-
-// Gets ALL uncharged sales for a specific user from the top-level 'sales' collection.
-export const listenToAllUnchargedSales = (userId: string, callback: (sales: Sale[]) => void) => {
-  const q = query(
-    collection(db, 'sales'),
-    where('userId', '==', userId),
-    where('charged', '==', false),
-    orderBy('timestamp', 'desc')
-  );
+export const listenToSales = (shiftId: string, callback: (sales: Sale[]) => void) => {
+  const salesCollection = collection(db, 'shifts', shiftId, 'sales');
+  const q = query(salesCollection, orderBy('timestamp', 'desc'));
 
   return onSnapshot(q, (querySnapshot) => {
     const sales = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Sale));
     callback(sales);
   }, (error) => {
-    console.error("Error listening to all uncharged sales:", error);
+    console.error("Error listening to sales:", error);
   });
 };
 
-export const addSale = async (shiftId: string, userId: string, saleData: Omit<Sale, 'id' | 'userId' | 'shiftId'>) => {
-  const salesRootCollection = collection(db, 'sales');
-  await addDoc(salesRootCollection, {...saleData, userId, shiftId, charged: false, timestamp: serverTimestamp()});
+export const addSale = async (shiftId: string, saleData: Omit<Sale, 'id' | 'shiftId'>) => {
+  const salesCollection = collection(db, 'shifts', shiftId, 'sales');
+  await addDoc(salesCollection, {...saleData, charged: false, timestamp: serverTimestamp()});
 };
 
-export const updateSale = async (saleId: string, updates: Partial<Omit<Sale, 'id'>>) => {
-    const saleRef = doc(db, 'sales', saleId);
+export const updateSale = async (shiftId: string, saleId: string, updates: Partial<Omit<Sale, 'id' | 'shiftId'>>) => {
+    const saleRef = doc(db, 'shifts', shiftId, 'sales', saleId);
     await updateDoc(saleRef, updates);
 };
 
-export const deleteSale = async (saleId: string) => {
-  const saleRef = doc(db, 'sales', saleId);
+export const deleteSale = async (shiftId: string, saleId: string) => {
+  const saleRef = doc(db, 'shifts', shiftId, 'sales', saleId);
   await deleteDoc(saleRef);
 };
