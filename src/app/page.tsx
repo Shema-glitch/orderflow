@@ -21,8 +21,9 @@ import type { User } from 'firebase/auth';
 import LoginScreen from '@/components/screens/login-screen';
 import OrderDetailScreen from '@/components/screens/order-detail-screen';
 import { ToastAction } from "@/components/ui/toast"
-import { createShift, closeShift, listenToOrders, addOrder, updateOrder, deleteOrder, listenToSales, addSale, deleteSale, updateSale, getCurrentShift } from '@/lib/firestore';
+import { createShift, closeShift, listenToOrders, addOrder, updateOrder, deleteOrder, listenToSales, addSale, deleteSale, updateSale } from '@/lib/firestore';
 import { Badge } from '@/components/ui/badge';
+import isEqual from 'lodash.isequal';
 
 
 export default function Home() {
@@ -93,14 +94,12 @@ export default function Home() {
       return;
     }
     if (user) {
-      getCurrentShift(user.uid).then(activeShift => {
-        setShift(activeShift);
-        if (!activeShift) {
-            setView('shift_closed');
-        } else {
+        const fetchShift = async () => {
+            const activeShift = await createShift(user.uid);
+            setShift(activeShift);
             setView('orders_list');
         }
-      });
+        fetchShift();
     } else {
       // User is logged out
       setView('shift_closed');
@@ -213,6 +212,23 @@ export default function Home() {
       return false; // Indicate failure
     }
 
+    // Check for duplicates
+    if (!editingOrder) {
+      const isDuplicate = orders.some(order => 
+        order.customerName.trim().toLowerCase() === orderData.customerName.trim().toLowerCase() &&
+        isEqual(order.items, orderData.items)
+      );
+      if (isDuplicate) {
+        toast({
+          variant: "destructive",
+          title: "Duplicate Order",
+          description: "This exact order for this customer already exists.",
+        });
+        return false;
+      }
+    }
+
+
     try {
       if (editingOrder) {
         // Update existing order
@@ -228,6 +244,7 @@ export default function Home() {
           description: `Don't forget to mark it as 'Charged' once payment is received.`,
         });
       }
+      // Optimistic UI update: Close the form immediately
       setShowNewEntry(false);
       setEditingOrder(null);
       return true; // Indicate success
@@ -429,7 +446,7 @@ export default function Home() {
           {user && shift && (
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-xs text-muted-foreground">Current Shift</p>
-                <Badge variant={isOnline ? "success" : "destructive"} className={`transition-colors ${isOnline ? 'animate-pulse' : ''}`}>
+                <Badge variant={isOnline ? "success" : "destructive"} className={`transition-colors ${isOnline ? 'animate-ring' : ''}`}>
                     {isOnline ? 'Online' : 'Offline'}
                 </Badge>
               </div>
@@ -511,3 +528,5 @@ export default function Home() {
     </div>
   );
 }
+
+    

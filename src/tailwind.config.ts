@@ -93,14 +93,31 @@ export default {
           '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
           '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
           '40%, 60%': { transform: 'translate3d(4px, 0, 0)' },
-        }
+        },
+        'ring': {
+          '0%': {
+            transform: 'scale(1)',
+            opacity: '0.5'
+          },
+          '100%': {
+            transform: 'scale(1.5)',
+            opacity: '0'
+          }
+        },
+        'breathing-ring': {
+          '0%, 100%': { 'box-shadow': '0 0 0 0px hsl(var(--success) / 0.3)'},
+          '50%': { 'box-shadow': '0 0 0 3px hsl(var(--success) / 0.8)'},
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+        'ring': 'breathing-ring 2s cubic-bezier(0.4, 0, 0.2, 1) infinite',
       },
     },
   },
   plugins: [require('tailwindcss-animate')],
 } satisfies Config;
+
+    
