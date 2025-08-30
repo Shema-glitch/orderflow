@@ -1,3 +1,4 @@
+-v
 # Local Setup and Mobile Deployment Guide
 
 This guide will help you set up and run this NextJS application locally, and prepare it for deployment as a native application on your mobile device.
