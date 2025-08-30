@@ -4,6 +4,7 @@
 import type { Order } from '@/lib/types';
 import OrderCard from '@/components/order-card';
 import { ClipboardList } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface AllOrdersScreenProps {
   orders: Order[];
@@ -13,6 +14,30 @@ interface AllOrdersScreenProps {
   onEditOrder: (order: Order) => void;
   onViewOrder: (order: Order) => void;
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 14,
+    },
+  },
+};
+
 
 export default function AllOrdersScreen({ orders, onMarkAsCharged, onUnchargeOrder, onDeleteOrder, onEditOrder, onViewOrder }: AllOrdersScreenProps) {
 
@@ -26,11 +51,18 @@ export default function AllOrdersScreen({ orders, onMarkAsCharged, onUnchargeOrd
       </header>
 
       {orders.length > 0 ? (
-        <div className="space-y-4">
+        <motion.div 
+          className="space-y-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {orders.map(order => (
-            <OrderCard key={order.id} order={order} onMarkAsCharged={onMarkAsCharged} onUnchargeOrder={onUnchargeOrder} onDeleteOrder={onDeleteOrder} onEditOrder={onEditOrder} onViewOrder={onViewOrder} />
+            <motion.div key={order.id} variants={itemVariants}>
+              <OrderCard order={order} onMarkAsCharged={onMarkAsCharged} onUnchargeOrder={onUnchargeOrder} onDeleteOrder={onDeleteOrder} onEditOrder={onEditOrder} onViewOrder={onViewOrder} />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       ) : (
         <div className="flex flex-col items-center justify-center h-[60vh] text-center text-muted-foreground border-2 border-dashed rounded-lg p-4 bg-card">
           <ClipboardList className="h-16 w-16 mb-4 text-gray-400" />
@@ -41,5 +73,3 @@ export default function AllOrdersScreen({ orders, onMarkAsCharged, onUnchargeOrd
     </div>
   );
 }
-
-    
