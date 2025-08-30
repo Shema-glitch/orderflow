@@ -24,7 +24,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
 
@@ -58,7 +57,7 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
         className="w-full shadow-md transition-all duration-300 hover:shadow-lg dark:shadow-none dark:hover:bg-white/5"
         onClick={() => onViewOrder(order)}
     >
-      <CardContent className="p-6">
+      <CardContent className="p-4">
         <div className="flex items-start justify-between space-x-4">
           <div className="flex items-center space-x-4 flex-1">
             <Avatar className="h-12 w-12 text-lg">
@@ -67,14 +66,21 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
             <div className="flex-1">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-bold text-xl text-foreground">
+                  <h3 className="font-bold text-lg text-foreground">
                     {order.customerName}
                   </h3>
                   <p className="text-sm text-muted-foreground -mt-1">{order.items.category}</p>
                 </div>
-                 <div className="text-xs text-muted-foreground font-mono text-right pl-2">
-                  {formattedTime}
-                </div>
+                 <div className="text-right pl-2">
+                    <p className="text-xs text-muted-foreground font-mono">
+                      {formattedTime}
+                    </p>
+                    {hasExtraToppings && (
+                      <Badge variant="destructive" className="mt-1">
+                        Add. Cost
+                      </Badge>
+                    )}
+                 </div>
               </div>
             </div>
           </div>
@@ -127,50 +133,15 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
             </AlertDialog>
           </div>
         </div>
-
-        <div className="space-y-4 text-sm text-muted-foreground mt-4">
-           {Object.entries(order.items.selections).some(([_, items]) => Array.isArray(items) && items.length > 0) &&
-              <div className="flex items-start">
-                <ShoppingBasket className="mr-3 mt-1 h-4 w-4 flex-shrink-0 text-primary/80"/>
-                <div className='flex-1 flex flex-wrap'>
-                  {Object.entries(order.items.selections).map(([subcategory, items]) => (
-                    Array.isArray(items) && items.length > 0 && (
-                      <div key={subcategory} className="mr-4 mb-1">
-                        <span className="font-semibold text-foreground/90">{subcategory}: </span>
-                        <span>{items.join(', ')}</span>
-                      </div>
-                    )
-                  ))}
-                </div>
-              </div>
-            }
-
-          {order.notes && (
-            <div className="flex items-start">
-              <MessageSquare className="mr-3 mt-0.5 h-4 w-4 flex-shrink-0 text-primary/80"/>
-              <p className="flex-1 text-foreground/90 italic">"{order.notes}"</p>
-            </div>
-          )}
-
-          {hasExtraToppings && (
-            <Badge variant="destructive" className="flex items-center gap-1.5 w-fit">
-              <AlertTriangle className="h-3.5 w-3.5" />
-              Additional Topping Cost
-            </Badge>
-          )}
-        </div>
         
-        <div className="mt-6 flex justify-between items-center" onClick={e => e.stopPropagation()}>
-           <Badge variant={order.charged ? 'success' : 'destructive'}>
-              {order.charged ? 'Charged' : 'Not Charged'}
-            </Badge>
+        <div className="mt-4 flex justify-between items-center" onClick={e => e.stopPropagation()}>
             {order.charged ? (
-                <Button variant="ghost" size="sm" className="text-success pointer-events-none">
+                <Button variant="ghost" size="sm" className="text-success pointer-events-none w-full justify-start p-0 h-auto">
                     <CheckCircle2 className="mr-2 h-5 w-5"/>
-                    Paid
+                    <span className="font-semibold">Paid</span>
                 </Button>
             ) : (
-                <Button size="sm" onClick={() => onMarkAsCharged(order.id)}>
+                <Button size="sm" onClick={() => onMarkAsCharged(order.id)} className="w-full">
                     <Circle className="mr-2 h-5 w-5"/>
                     Mark as Charged
                 </Button>
