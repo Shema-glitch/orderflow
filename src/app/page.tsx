@@ -38,6 +38,9 @@ export default function Home() {
   const [theme, setTheme] = useState('light');
   const { user, loading: authLoading } = useAuth();
   const [menu, setMenu] = useLocalStorage('menu', initialMenu);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [salesLoading, setSalesLoading] = useState(true);
+
 
   useEffect(() => {
     // On mount, set theme from localStorage or system preference
@@ -84,13 +87,21 @@ export default function Home() {
   }, [user, authLoading]);
 
 
-  // Listen to orders and sales when a shift is active
+  // Listen to orders and sales when a user is logged in
   useEffect(() => {
     if (user) {
+      setOrdersLoading(true);
+      setSalesLoading(true);
       // Now listening to ALL uncharged orders for the user
-      const unsubscribeOrders = listenToAllUnchargedOrders(user.uid, setOrders);
+      const unsubscribeOrders = listenToAllUnchargedOrders(user.uid, (loadedOrders) => {
+        setOrders(loadedOrders);
+        setOrdersLoading(false);
+      });
       // Now listening to ALL uncharged sales for the user
-      const unsubscribeSales = listenToAllUnchargedSales(user.uid, setSales);
+      const unsubscribeSales = listenToAllUnchargedSales(user.uid, (loadedSales) => {
+        setSales(loadedSales);
+        setSalesLoading(false);
+      });
       
       // Cleanup listeners on component unmount or user change
       return () => {
@@ -116,7 +127,7 @@ export default function Home() {
     if (shift) {
       await closeShift(shift.id);
       setShift(null);
-      // Orders list will be cleared by the shift listener
+      setOrders([]);
       setSales([]);
       setEditingOrder(null);
       setView('shift_closed');
@@ -317,15 +328,15 @@ export default function Home() {
     // The "all_orders" view needs to be rethought. For now, it will show the same as "orders_list".
     switch (view) {
       case 'orders_list':
-        return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
+        return <OrdersListScreen orders={orders} isLoading={ordersLoading} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
       case 'all_orders':
-        return <AllOrdersScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
+        return <AllOrdersScreen orders={orders} isLoading={ordersLoading} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
       case 'sales':
-        return <SalesScreen sales={sales} onSaveSale={handleSaveSale} onMarkAsCharged={handleMarkSaleAsCharged} onEditSale={handleEditSale} onDeleteSale={handleDeleteSale} />;
+        return <SalesScreen sales={sales} isLoading={salesLoading} onSaveSale={handleSaveSale} onMarkAsCharged={handleMarkSaleAsCharged} onEditSale={handleEditSale} onDeleteSale={handleDeleteSale} />;
       case 'shift_summary':
         return <ShiftSummaryScreen shift={shift} orders={orders} sales={sales} onCloseShift={handleCloseShift} />;
       default:
-        return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
+        return <OrdersListScreen orders={orders} isLoading={ordersLoading} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
     }
   };
 

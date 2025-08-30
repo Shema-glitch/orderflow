@@ -13,9 +13,11 @@ import { Package, Receipt, Droplet, User, Save, Dumbbell, CreditCard, Clock, Che
 import SaleCard from '@/components/sale-card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { motion } from 'framer-motion';
+import SaleCardSkeleton from '../sale-card-skeleton';
 
 interface SalesScreenProps {
   sales: Sale[];
+  isLoading: boolean;
   onSaveSale: (sale: Omit<Sale, 'id' | 'timestamp' | 'userId' | 'shiftId'>) => void;
   onMarkAsCharged: (saleId: string) => void;
   onEditSale: (sale: Sale) => void;
@@ -55,7 +57,7 @@ const itemVariants = {
   },
 };
 
-export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged, onEditSale, onDeleteSale }: SalesScreenProps) {
+export default function SalesScreen({ sales, isLoading, onSaveSale, onMarkAsCharged, onEditSale, onDeleteSale }: SalesScreenProps) {
   const [customerName, setCustomerName] = useState('');
   const [selectedMembership, setSelectedMembership] = useState<MembershipType | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<MembershipDuration | null>(null);
@@ -169,9 +171,15 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged, onEdit
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Uncharged Sales</h2>
+            {!isLoading && (
              <span className="font-bold text-3xl text-destructive">{unchargedSales.length}</span>
+            )}
         </div>
-        {unchargedSales.length > 0 ? (
+        {isLoading ? (
+          <div className="space-y-4">
+            {[...Array(2)].map((_, i) => <SaleCardSkeleton key={i} />)}
+          </div>
+        ) : unchargedSales.length > 0 ? (
           <motion.div 
             className="space-y-4"
             variants={containerVariants}

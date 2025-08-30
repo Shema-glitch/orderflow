@@ -5,9 +5,12 @@ import type { Order } from '@/lib/types';
 import OrderCard from '@/components/order-card';
 import { ClipboardList } from 'lucide-react';
 import { motion } from 'framer-motion';
+import OrderCardSkeleton from '../order-card-skeleton';
+
 
 interface AllOrdersScreenProps {
   orders: Order[];
+  isLoading: boolean;
   onMarkAsCharged: (orderId: string) => void;
   onUnchargeOrder: (orderId: string) => void;
   onDeleteOrder: (orderId: string) => void;
@@ -39,19 +42,25 @@ const itemVariants = {
 };
 
 
-export default function AllOrdersScreen({ orders, onMarkAsCharged, onUnchargeOrder, onDeleteOrder, onEditOrder, onViewOrder }: AllOrdersScreenProps) {
+export default function AllOrdersScreen({ orders, isLoading, onMarkAsCharged, onUnchargeOrder, onDeleteOrder, onEditOrder, onViewOrder }: AllOrdersScreenProps) {
   // This screen now behaves the same as the "Uncharged" screen, as we are fetching all uncharged orders.
   // In the future, this screen could be adapted to show ALL orders, charged or not.
   return (
     <div className="w-full">
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-primary">All Uncharged Orders</h1>
-        <div className="flex items-center gap-2">
-            <span className="font-bold text-3xl text-muted-foreground">{orders.length}</span>
-        </div>
+        {!isLoading && (
+            <div className="flex items-center gap-2">
+                <span className="font-bold text-3xl text-muted-foreground">{orders.length}</span>
+            </div>
+        )}
       </header>
 
-      {orders.length > 0 ? (
+       {isLoading ? (
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => <OrderCardSkeleton key={i} />)}
+        </div>
+      ) : orders.length > 0 ? (
         <motion.div 
           className="space-y-4"
           variants={containerVariants}

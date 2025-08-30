@@ -5,10 +5,12 @@ import type { Order } from '@/lib/types';
 import OrderCard from '@/components/order-card';
 import { ClipboardList } from 'lucide-react';
 import { motion } from 'framer-motion';
+import OrderCardSkeleton from '../order-card-skeleton';
 
 
 interface OrdersListScreenProps {
   orders: Order[];
+  isLoading: boolean;
   onMarkAsCharged: (orderId: string) => void;
   onUnchargeOrder: (orderId: string) => void;
   onDeleteOrder: (orderId: string) => void;
@@ -39,17 +41,23 @@ const itemVariants = {
   },
 };
 
-export default function OrdersListScreen({ orders, onMarkAsCharged, onUnchargeOrder, onDeleteOrder, onEditOrder, onViewOrder }: OrdersListScreenProps) {
+export default function OrdersListScreen({ orders, isLoading, onMarkAsCharged, onUnchargeOrder, onDeleteOrder, onEditOrder, onViewOrder }: OrdersListScreenProps) {
   const unchargedOrders = orders.filter(order => !order.charged);
 
   return (
     <div className="w-full">
       <header className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-primary">Uncharged Orders</h1>
-        <span className="font-bold text-3xl text-destructive">{unchargedOrders.length}</span>
+        {!isLoading && (
+            <span className="font-bold text-3xl text-destructive">{unchargedOrders.length}</span>
+        )}
       </header>
 
-      {unchargedOrders.length > 0 ? (
+      {isLoading ? (
+        <div className="space-y-4">
+          {[...Array(4)].map((_, i) => <OrderCardSkeleton key={i} />)}
+        </div>
+      ) : unchargedOrders.length > 0 ? (
         <motion.div 
           className="space-y-4"
           variants={containerVariants}
