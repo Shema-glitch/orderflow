@@ -69,11 +69,10 @@ export default function SaleCard({ sale, onMarkAsCharged, onEdit, onDelete }: Sa
   return (
     <div className="relative w-full overflow-hidden rounded-lg">
         {/* Background Actions Container */}
-        <div className="absolute inset-0 flex justify-between items-center">
+        <div className="absolute inset-0 flex justify-between items-center bg-card rounded-lg">
             {/* Edit Action (Left) */}
             <div 
-                className="bg-blue-500 h-full flex items-center justify-center pl-4 pr-2"
-                style={{ width: `${SWIPE_THRESHOLD_RIGHT}px` }}
+                className="bg-blue-500 h-full flex items-center justify-start pl-6 flex-1"
             >
                  <Button onClick={() => handleActionClick('edit')} variant="ghost" size="icon" className="text-white hover:bg-blue-600 hover:text-white">
                     <Edit className="h-5 w-5"/>
@@ -81,8 +80,7 @@ export default function SaleCard({ sale, onMarkAsCharged, onEdit, onDelete }: Sa
             </div>
             {/* Delete Action (Right) */}
             <div 
-                className="bg-destructive h-full flex items-center justify-center pr-4 pl-2"
-                style={{ width: `${-SWIPE_THRESHOLD_LEFT}px` }}
+                className="bg-destructive h-full flex items-center justify-end pr-6 flex-1"
             >
                 <Button onClick={() => handleActionClick('delete')} variant="ghost" size="icon" className="text-white hover:bg-destructive/90 hover:text-white">
                     <Trash2 className="h-5 w-5"/>
@@ -100,7 +98,7 @@ export default function SaleCard({ sale, onMarkAsCharged, onEdit, onDelete }: Sa
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="relative z-10"
       >
-        <Card className="w-full shadow-md transition-all duration-300 dark:shadow-none bg-card rounded-lg border-0">
+        <Card className="w-full shadow-md transition-all duration-300 dark:shadow-none bg-card rounded-lg">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div className='flex-1 flex items-center space-x-4'>

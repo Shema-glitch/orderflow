@@ -7,10 +7,11 @@ import { membershipTypes, membershipDurations } from '@/lib/membership-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Package, Receipt, Droplet, User, Save, Dumbbell, CreditCard, Clock } from 'lucide-react';
+import { Package, Receipt, Droplet, User, Save, Dumbbell, CreditCard, Clock, ChevronDown } from 'lucide-react';
 import SaleCard from '@/components/sale-card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 
 interface SalesScreenProps {
@@ -35,6 +36,7 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged, onEdit
   const [customerName, setCustomerName] = useState('');
   const [selectedMembership, setSelectedMembership] = useState<MembershipType | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<MembershipDuration | null>(null);
+  const [isMembershipFormOpen, setIsMembershipFormOpen] = useState(false);
 
   const handleQuickSale = (name: string) => {
     onSaveSale({
@@ -61,6 +63,7 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged, onEdit
     setCustomerName('');
     setSelectedMembership(null);
     setSelectedDuration(null);
+    setIsMembershipFormOpen(false);
   };
 
   const unchargedSales = sales.filter(s => !s.charged);
@@ -74,44 +77,12 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged, onEdit
         <p className="text-muted-foreground">Log a membership or a miscellaneous sale.</p>
       </header>
 
-      <Tabs defaultValue="membership" className="w-full">
+      <Tabs defaultValue="quick" className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="membership"><CreditCard className="mr-2 h-5 w-5"/>Membership</TabsTrigger>
           <TabsTrigger value="quick"><Package className="mr-2 h-5 w-5"/>Quick Sale</TabsTrigger>
+          <TabsTrigger value="membership"><CreditCard className="mr-2 h-5 w-5"/>Membership</TabsTrigger>
         </TabsList>
-        <TabsContent value="membership">
-          <Card>
-            <CardContent className="pt-6 space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="customerName" className="flex items-center text-base"><User className="mr-2 h-4 w-4"/>Customer Name</Label>
-                <Input id="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="e.g., Eric M." />
-              </div>
-              <div>
-                <Label className="text-base flex items-center"><Dumbbell className="mr-2 h-4 w-4"/>Membership Type</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {membershipTypes.map(type => (
-                    <Button key={type} variant={selectedMembership === type ? 'default' : 'outline'} onClick={() => setSelectedMembership(type)}>
-                      {type}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-               <div>
-                <Label className="text-base flex items-center"><Clock className="mr-2 h-4 w-4"/>Membership Duration</Label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {membershipDurations.map(duration => (
-                    <Button key={duration} variant={selectedDuration === duration ? 'default' : 'outline'} onClick={() => setSelectedDuration(duration)}>
-                      {duration}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <Button onClick={handleSaveMembershipSale} className="w-full" disabled={!customerName || !selectedMembership || !selectedDuration}>
-                <Save className="mr-2 h-4 w-4"/> Log Membership Sale
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+
         <TabsContent value="quick">
            <div className="grid grid-cols-1 gap-4">
             {quickSaleItems.map((item) => (
@@ -126,6 +97,49 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged, onEdit
               </Button>
             ))}
           </div>
+        </TabsContent>
+        <TabsContent value="membership">
+            <Collapsible open={isMembershipFormOpen} onOpenChange={setIsMembershipFormOpen}>
+                <CollapsibleTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                        Record New Membership
+                        <ChevronDown className={`h-5 w-5 transition-transform ${isMembershipFormOpen ? 'rotate-180' : ''}`} />
+                    </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                    <Card className="mt-2">
+                        <CardContent className="pt-6 space-y-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="customerName" className="flex items-center text-base"><User className="mr-2 h-4 w-4"/>Customer Name</Label>
+                            <Input id="customerName" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="e.g., Eric M." />
+                        </div>
+                        <div>
+                            <Label className="text-base flex items-center"><Dumbbell className="mr-2 h-4 w-4"/>Membership Type</Label>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                            {membershipTypes.map(type => (
+                                <Button key={type} variant={selectedMembership === type ? 'default' : 'outline'} onClick={() => setSelectedMembership(type)}>
+                                {type}
+                                </Button>
+                            ))}
+                            </div>
+                        </div>
+                        <div>
+                            <Label className="text-base flex items-center"><Clock className="mr-2 h-4 w-4"/>Membership Duration</Label>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                            {membershipDurations.map(duration => (
+                                <Button key={duration} variant={selectedDuration === duration ? 'default' : 'outline'} onClick={() => setSelectedDuration(duration)}>
+                                {duration}
+                                </Button>
+                            ))}
+                            </div>
+                        </div>
+                        <Button onClick={handleSaveMembershipSale} className="w-full" disabled={!customerName || !selectedMembership || !selectedDuration}>
+                            <Save className="mr-2 h-4 w-4"/> Log Membership Sale
+                        </Button>
+                        </CardContent>
+                    </Card>
+                </CollapsibleContent>
+            </Collapsible>
         </TabsContent>
       </Tabs>
 
