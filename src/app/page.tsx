@@ -21,7 +21,8 @@ import type { User } from 'firebase/auth';
 import LoginScreen from '@/components/screens/login-screen';
 import OrderDetailScreen from '@/components/screens/order-detail-screen';
 import { ToastAction } from "@/components/ui/toast"
-import { getCurrentShift, createShift, closeShift, listenToOrders, addOrder, updateOrder, deleteOrder, listenToSales, addSale, deleteSale, updateSale } from '@/lib/firestore';
+import { createShift, closeShift, listenToOrders, addOrder, updateOrder, deleteOrder, listenToSales, addSale, deleteSale, updateSale, getCurrentShift } from '@/lib/firestore';
+import { Badge } from '@/components/ui/badge';
 
 
 export default function Home() {
@@ -40,12 +41,16 @@ export default function Home() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [salesLoading, setSalesLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
+  const [isOfflineDialogOpen, setIsOfflineDialogOpen] = useState(false);
 
 
   useEffect(() => {
     // Handle online/offline status
     const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOffline = () => {
+        setIsOnline(false);
+        setIsOfflineDialogOpen(true);
+    }
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -422,12 +427,11 @@ export default function Home() {
         <div>
           <h1 className="text-xl font-bold text-primary">OrderFlow Lite</h1>
           {user && shift && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mt-1">
                 <p className="text-xs text-muted-foreground">Current Shift</p>
-                <div 
-                    className={`h-2.5 w-2.5 rounded-full transition-colors ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
-                    title={isOnline ? 'Online' : 'Offline'}
-                />
+                <Badge variant={isOnline ? "success" : "destructive"} className={`transition-colors ${isOnline ? 'animate-pulse' : ''}`}>
+                    {isOnline ? 'Online' : 'Offline'}
+                </Badge>
               </div>
           )}
         </div>
@@ -490,10 +494,20 @@ export default function Home() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+       <AlertDialog open={isOfflineDialogOpen} onOpenChange={setIsOfflineDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>You are Offline</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your internet connection was lost. You can continue to work as normal. All changes will be saved locally and will sync automatically when you reconnect.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setIsOfflineDialogOpen(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
-
-    
-
-    
