@@ -88,7 +88,7 @@ export default function Home() {
 
   // Listen to orders and sales when a shift is active
   useEffect(() => {
-    if (shift) {
+    if (shift && user) {
       setOrdersLoading(true);
       setSalesLoading(true);
 
@@ -111,7 +111,7 @@ export default function Home() {
       setOrders([]);
       setSales([]);
     }
-  }, [shift]);
+  }, [shift, user]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
@@ -133,7 +133,7 @@ export default function Home() {
       
       if (!force && (unchargedOrdersCount > 0 || unchargedSalesCount > 0)) {
         // This will be handled by the warning dialog in ShiftSummaryScreen
-        // which now controls the flow.
+        // which now controls the flow. Returning here prevents closing.
         return;
       }
       await closeShift(shift.id);
@@ -145,7 +145,7 @@ export default function Home() {
     }
   };
 
-  const handleSaveOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'charged' | 'shiftId'>): Promise<boolean> => {
+  const handleSaveOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'charged' | 'shiftId' | 'userId'>): Promise<boolean> => {
      if (!shift || !user) {
         toast({
             variant: "destructive",
@@ -185,7 +185,7 @@ export default function Home() {
           description: `Changes to ${orderData.customerName}'s order have been saved.`,
         });
       } else {
-        await addOrder(shift.id, orderData);
+        await addOrder(shift.id, user.uid, orderData);
         toast({
           title: "Order Saved!",
           description: `Don't forget to mark it as 'Charged' once payment is received.`,
@@ -205,10 +205,10 @@ export default function Home() {
     }
   };
   
-  const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp' | 'shiftId' | 'charged'>) => {
+  const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp' | 'shiftId' | 'charged' | 'userId'>) => {
     if (!shift || !user) return;
     try {
-        await addSale(shift.id, sale);
+        await addSale(shift.id, user.uid, sale);
         toast({
             title: "Sale Logged",
             description: `${sale.type === 'Membership' ? sale.customerName : sale.name} sale logged.`
@@ -448,5 +448,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

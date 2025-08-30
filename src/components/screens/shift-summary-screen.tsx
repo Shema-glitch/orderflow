@@ -23,7 +23,7 @@ interface ShiftSummaryScreenProps {
   shift: Shift | null;
   orders: Order[];
   sales: Sale[];
-  onCloseShift: () => void;
+  onCloseShift: (force?: boolean) => void;
 }
 
 export default function ShiftSummaryScreen({ shift, orders, sales, onCloseShift }: ShiftSummaryScreenProps) {
@@ -71,7 +71,6 @@ export default function ShiftSummaryScreen({ shift, orders, sales, onCloseShift 
   }
   
   const unchargedOrdersCount = orders.filter(o => !o.charged).length;
-  // For now, sales are still tied to the shift, so we check them directly.
   const unchargedSalesCount = sales.filter(s => !s.charged).length;
   const totalUncharged = unchargedOrdersCount + unchargedSalesCount;
 
@@ -132,13 +131,13 @@ export default function ShiftSummaryScreen({ shift, orders, sales, onCloseShift 
                         Are you sure you want to end your shift?
                     </AlertDialogTitle>
                     <AlertDialogDescription>
-                        Closing the shift will clear the current session. Any uncharged orders will reappear when you start a new shift.
+                        Closing the shift will clear the current session. Make sure all payments have been collected.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={() => {
-                        onCloseShift();
+                        onCloseShift(true);
                         setIsCloseConfirmationOpen(false);
                     }} className="bg-destructive hover:bg-destructive/90">
                         Yes, Close Shift
@@ -156,13 +155,13 @@ export default function ShiftSummaryScreen({ shift, orders, sales, onCloseShift 
                         Uncharged Items Pending
                     </AlertDialogTitle>
                     <AlertDialogDescription>
-                        You have {totalUncharged} uncharged item(s). If you close the shift, these items will carry over to your next shift. Do you want to proceed?
+                        You have {totalUncharged} uncharged item(s). These items will NOT be carried over to your next shift. Please resolve them before closing the shift.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>Go Back</AlertDialogCancel>
                     <AlertDialogAction onClick={() => {
-                        onCloseShift();
+                        onCloseShift(true); // force close
                         setIsWarningDialogOpen(false);
                     }}>
                         Close Shift Anyway
