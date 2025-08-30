@@ -24,12 +24,20 @@ export default function SaleCard({ sale, onMarkAsCharged, onEdit, onDelete }: Sa
   const cardRef = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const controls = useAnimation();
-  const SWIPE_THRESHOLD = -100;
+  
+  const SWIPE_THRESHOLD_RIGHT = 100; // For edit
+  const SWIPE_THRESHOLD_LEFT = -100; // For delete
 
   const handleDragEnd = (event: any, info: any) => {
-    if (info.offset.x < SWIPE_THRESHOLD) {
-      controls.start({ x: SWIPE_THRESHOLD });
+    const offset = info.offset.x;
+    if (offset < SWIPE_THRESHOLD_LEFT) {
+      // Swiped far left (for delete)
+      controls.start({ x: SWIPE_THRESHOLD_LEFT });
+    } else if (offset > SWIPE_THRESHOLD_RIGHT) {
+      // Swiped far right (for edit)
+      controls.start({ x: SWIPE_THRESHOLD_RIGHT });
     } else {
+      // Not swiped far enough, snap back
       controls.start({ x: 0 });
     }
   };
@@ -59,17 +67,29 @@ export default function SaleCard({ sale, onMarkAsCharged, onEdit, onDelete }: Sa
   };
 
   return (
-    <div className="relative w-full overflow-hidden">
-        <div className="absolute top-0 right-0 h-full flex items-center">
-            <Button onClick={() => handleActionClick('edit')} className="h-full w-20 bg-blue-500 hover:bg-blue-600 rounded-none flex flex-col items-center justify-center text-white">
-                <Edit className="h-5 w-5 mb-1"/>
-                <span>Edit</span>
-            </Button>
-            <Button onClick={() => handleActionClick('delete')} className="h-full w-20 bg-destructive hover:bg-destructive/90 rounded-none flex flex-col items-center justify-center text-white">
-                <Trash2 className="h-5 w-5 mb-1"/>
-                <span>Delete</span>
-            </Button>
+    <div className="relative w-full overflow-hidden rounded-lg">
+        {/* Background Actions Container */}
+        <div className="absolute inset-0 flex justify-between items-center">
+            {/* Edit Action (Left) */}
+            <div 
+                className="bg-blue-500 h-full flex items-center justify-center pl-4 pr-2"
+                style={{ width: `${SWIPE_THRESHOLD_RIGHT}px` }}
+            >
+                 <Button onClick={() => handleActionClick('edit')} variant="ghost" size="icon" className="text-white hover:bg-blue-600 hover:text-white">
+                    <Edit className="h-5 w-5"/>
+                </Button>
+            </div>
+            {/* Delete Action (Right) */}
+            <div 
+                className="bg-destructive h-full flex items-center justify-center pr-4 pl-2"
+                style={{ width: `${-SWIPE_THRESHOLD_LEFT}px` }}
+            >
+                <Button onClick={() => handleActionClick('delete')} variant="ghost" size="icon" className="text-white hover:bg-destructive/90 hover:text-white">
+                    <Trash2 className="h-5 w-5"/>
+                </Button>
+            </div>
         </div>
+
       <motion.div
         ref={cardRef}
         drag="x"
@@ -80,7 +100,7 @@ export default function SaleCard({ sale, onMarkAsCharged, onEdit, onDelete }: Sa
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="relative z-10"
       >
-        <Card className="w-full shadow-md transition-all duration-300 dark:shadow-none bg-card">
+        <Card className="w-full shadow-md transition-all duration-300 dark:shadow-none bg-card rounded-lg border-0">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div className='flex-1 flex items-center space-x-4'>
