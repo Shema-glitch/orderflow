@@ -49,6 +49,7 @@ try {
 const shiftsCollection = collection(db, 'shifts');
 
 export const getCurrentShift = async (userId: string): Promise<Shift | null> => {
+  if (!userId) return null;
   try {
     const q = query(shiftsCollection, where('userId', '==', userId), where('isOpen', '==', true), limit(1));
     const querySnapshot = await getDocs(q);
@@ -66,6 +67,8 @@ export const getCurrentShift = async (userId: string): Promise<Shift | null> => 
 };
 
 export const createShift = async (userId: string): Promise<Shift> => {
+    if (!userId) throw new Error("User ID is required to create a shift.");
+
     const batch = writeBatch(db);
 
     // 1. Find all uncharged orders from previous shifts for the user
@@ -125,6 +128,7 @@ export const createShift = async (userId: string): Promise<Shift> => {
 };
 
 export const closeShift = async (shiftId: string): Promise<void> => {
+  if (!shiftId) return;
   const shiftRef = doc(db, 'shifts', shiftId);
   await updateDoc(shiftRef, {
     isOpen: false,
@@ -135,6 +139,7 @@ export const closeShift = async (shiftId: string): Promise<void> => {
 
 // ORDER MANAGEMENT
 export const listenToOrders = (shiftId: string, callback: (orders: Order[]) => void) => {
+  if (!shiftId) return () => {}; // Return an empty unsubscribe function
   const ordersCollection = collection(db, 'shifts', shiftId, 'orders');
   const q = query(ordersCollection, orderBy('timestamp', 'desc'));
   
@@ -147,16 +152,19 @@ export const listenToOrders = (shiftId: string, callback: (orders: Order[]) => v
 };
 
 export const addOrder = async (shiftId: string, userId: string, orderData: Omit<Order, 'id' | 'shiftId' | 'userId'>) => {
+  if (!shiftId || !userId) return;
   const ordersCollection = collection(db, 'shifts', shiftId, 'orders');
   await addDoc(ordersCollection, {...orderData, userId, charged: false, timestamp: serverTimestamp()});
 };
 
 export const updateOrder = async (shiftId: string, orderId: string, updates: Partial<Omit<Order, 'id' | 'shiftId'>>) => {
+  if (!shiftId || !orderId) return;
   const orderRef = doc(db, 'shifts', shiftId, 'orders', orderId);
   await updateDoc(orderRef, updates);
 };
 
 export const deleteOrder = async (shiftId: string, orderId: string) => {
+  if (!shiftId || !orderId) return;
   const orderRef = doc(db, 'shifts', shiftId, 'orders', orderId);
   await deleteDoc(orderRef);
 };
@@ -164,6 +172,7 @@ export const deleteOrder = async (shiftId: string, orderId: string) => {
 
 // SALE MANAGEMENT
 export const listenToSales = (shiftId: string, callback: (sales: Sale[]) => void) => {
+  if (!shiftId) return () => {}; // Return an empty unsubscribe function
   const salesCollection = collection(db, 'shifts', shiftId, 'sales');
   const q = query(salesCollection, orderBy('timestamp', 'desc'));
 
@@ -176,16 +185,19 @@ export const listenToSales = (shiftId: string, callback: (sales: Sale[]) => void
 };
 
 export const addSale = async (shiftId: string, userId: string, saleData: Omit<Sale, 'id' | 'shiftId' | 'userId'>) => {
+  if (!shiftId || !userId) return;
   const salesCollection = collection(db, 'shifts', shiftId, 'sales');
   await addDoc(salesCollection, {...saleData, userId, charged: false, timestamp: serverTimestamp()});
 };
 
 export const updateSale = async (shiftId: string, saleId: string, updates: Partial<Omit<Sale, 'id' | 'shiftId'>>) => {
+    if (!shiftId || !saleId) return;
     const saleRef = doc(db, 'shifts', shiftId, 'sales', saleId);
     await updateDoc(saleRef, updates);
 };
 
 export const deleteSale = async (shiftId: string, saleId: string) => {
+  if (!shiftId || !saleId) return;
   const saleRef = doc(db, 'shifts', shiftId, 'sales', saleId);
   await deleteDoc(saleRef);
 };
