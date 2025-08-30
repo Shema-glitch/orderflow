@@ -20,6 +20,7 @@ import { useAuth, signInWithGoogle, signOutUser } from '@/lib/auth';
 import type { User } from 'firebase/auth';
 import LoginScreen from '@/components/screens/login-screen';
 import OrderDetailScreen from '@/components/screens/order-detail-screen';
+import { ToastAction } from "@/components/ui/toast"
 
 
 export default function Home() {
@@ -140,6 +141,34 @@ export default function Home() {
       description: `${sale.type === 'Membership' ? sale.membershipType : sale.name} sale logged.`
     });
   };
+  
+  const handleEditSale = (sale: Sale) => {
+    // TODO: Implement the UI for editing a sale
+    console.log('Editing sale:', sale);
+    toast({
+      title: "Edit Sale (Not Implemented)",
+      description: "The UI for editing sales is not yet built.",
+    });
+  };
+
+  const handleDeleteSale = (saleId: string) => {
+    const saleToDelete = sales.find(s => s.id === saleId);
+    if (!saleToDelete) return;
+
+    const originalSales = [...sales];
+    setSales(prevSales => prevSales.filter(s => s.id !== saleId));
+
+    toast({
+      title: "Sale Deleted",
+      description: `${saleToDelete.type === 'Membership' ? saleToDelete.customerName : saleToDelete.name} sale has been removed.`,
+      action: (
+        <ToastAction altText="Undo" onClick={() => setSales(originalSales)}>
+          Undo
+        </ToastAction>
+      ),
+    });
+  };
+
 
   const handleEditOrder = (order: Order) => {
     setEditingOrder(order);
@@ -216,7 +245,7 @@ export default function Home() {
       case 'all_orders':
         return <AllOrdersScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
       case 'sales':
-        return <SalesScreen sales={sales} onSaveSale={handleSaveSale} onMarkAsCharged={handleMarkSaleAsCharged}/>;
+        return <SalesScreen sales={sales} onSaveSale={handleSaveSale} onMarkAsCharged={handleMarkSaleAsCharged} onEditSale={handleEditSale} onDeleteSale={handleDeleteSale} />;
       case 'shift_summary':
         return <ShiftSummaryScreen shift={shift} onCloseShift={handleCloseShift} />;
       default:

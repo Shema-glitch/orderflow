@@ -17,6 +17,8 @@ interface SalesScreenProps {
   sales: Sale[];
   onSaveSale: (sale: Omit<Sale, 'id' | 'timestamp'>) => void;
   onMarkAsCharged: (saleId: string) => void;
+  onEditSale: (sale: Sale) => void;
+  onDeleteSale: (saleId: string) => void;
 }
 
 interface QuickSaleItem {
@@ -29,7 +31,7 @@ const quickSaleItems: QuickSaleItem[] = [
   { name: 'Snack', icon: Package },
 ];
 
-export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: SalesScreenProps) {
+export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged, onEditSale, onDeleteSale }: SalesScreenProps) {
   const [customerName, setCustomerName] = useState('');
   const [selectedMembership, setSelectedMembership] = useState<MembershipType | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<MembershipDuration | null>(null);
@@ -130,13 +132,12 @@ export default function SalesScreen({ sales, onSaveSale, onMarkAsCharged }: Sale
 
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Uncharged Sales</h2>
-            <span className="font-bold text-2xl text-destructive">{unchargedSales.length}</span>
+            <h2 className="text-2xl font-bold">Sales Log</h2>
         </div>
         {sales.length > 0 ? (
           <div className="space-y-4">
             {sales.map(sale => (
-                <SaleCard key={sale.id} sale={sale} onMarkAsCharged={onMarkAsCharged} />
+                <SaleCard key={sale.id} sale={sale} onMarkAsCharged={onMarkAsCharged} onEdit={onEditSale} onDelete={onDeleteSale} />
             ))}
           </div>
         ) : (
