@@ -70,11 +70,15 @@ export default function Home() {
             setView('orders_list');
         }
       });
-    } else {
-      setView('loading');
+    } else if (user === null) {
+      // User is logged out
+      setView('shift_closed'); // Or a login screen view
       setShift(null);
       setOrders([]);
       setSales([]);
+    } else {
+      // user is undefined (still loading)
+      setView('loading');
     }
   }, [user]);
 
@@ -316,7 +320,7 @@ export default function Home() {
       case 'orders_list':
         return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
       case 'all_orders':
-        return <AllOrdersScreen orders={orders} onMarkAsCharged={handleMarkAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
+        return <AllOrdersScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
       case 'sales':
         return <SalesScreen sales={sales} onSaveSale={handleSaveSale} onMarkAsCharged={handleMarkSaleAsCharged} onEditSale={handleEditSale} onDeleteSale={handleDeleteSale} />;
       case 'shift_summary':

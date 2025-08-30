@@ -28,15 +28,21 @@ const db = getFirestore(app);
 const shiftsCollection = collection(db, 'shifts');
 
 export const getCurrentShift = async (userId: string): Promise<Shift | null> => {
-  const q = query(shiftsCollection, where('userId', '==', userId), where('isOpen', '==', true), limit(1));
-  const querySnapshot = await getDocs(q);
-  
-  if (querySnapshot.empty) {
+  try {
+    const q = query(shiftsCollection, where('userId', '==', userId), where('isOpen', '==', true), limit(1));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      return null;
+    }
+    
+    const shiftDoc = querySnapshot.docs[0];
+    return { id: shiftDoc.id, ...shiftDoc.data() } as Shift;
+  } catch (error) {
+    console.error("Error getting current shift:", error);
+    // Potentially handle this by informing the user
     return null;
   }
-  
-  const shiftDoc = querySnapshot.docs[0];
-  return { id: shiftDoc.id, ...shiftDoc.data() } as Shift;
 };
 
 export const createShift = async (userId: string): Promise<Shift> => {
@@ -71,6 +77,9 @@ export const listenToOrders = (shiftId: string, callback: (orders: Order[]) => v
   return onSnapshot(q, (querySnapshot) => {
     const orders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
     callback(orders);
+  }, (error) => {
+    console.error("Error listening to orders:", error);
+    // Handle error appropriately, maybe update UI to show an error state
   });
 };
 
@@ -99,6 +108,9 @@ export const listenToSales = (shiftId: string, callback: (sales: Sale[]) => void
   return onSnapshot(q, (querySnapshot) => {
     const sales = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Sale));
     callback(sales);
+  }, (error) => {
+    console.error("Error listening to sales:", error);
+    // Handle error appropriately
   });
 };
 

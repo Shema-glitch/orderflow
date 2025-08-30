@@ -24,7 +24,7 @@ provider.setCustomParameters({
 
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null | undefined>(undefined);
 
   useEffect(() => {
     setPersistence(auth, browserLocalPersistence);
