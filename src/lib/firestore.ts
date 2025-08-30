@@ -40,7 +40,6 @@ export const getCurrentShift = async (userId: string): Promise<Shift | null> => 
     return { id: shiftDoc.id, ...shiftDoc.data() } as Shift;
   } catch (error) {
     console.error("Error getting current shift:", error);
-    // Potentially handle this by informing the user
     return null;
   }
 };
@@ -79,13 +78,12 @@ export const listenToOrders = (shiftId: string, callback: (orders: Order[]) => v
     callback(orders);
   }, (error) => {
     console.error("Error listening to orders:", error);
-    // Handle error appropriately, maybe update UI to show an error state
   });
 };
 
-export const addOrder = async (shiftId: string, orderData: Omit<Order, 'id'>) => {
+export const addOrder = async (shiftId: string, userId: string, orderData: Omit<Order, 'id' | 'userId'>) => {
   const ordersCollection = collection(db, 'shifts', shiftId, 'orders');
-  await addDoc(ordersCollection, orderData);
+  await addDoc(ordersCollection, {...orderData, userId});
 };
 
 export const updateOrder = async (shiftId: string, orderId: string, updates: Partial<Order>) => {
@@ -110,13 +108,12 @@ export const listenToSales = (shiftId: string, callback: (sales: Sale[]) => void
     callback(sales);
   }, (error) => {
     console.error("Error listening to sales:", error);
-    // Handle error appropriately
   });
 };
 
-export const addSale = async (shiftId: string, saleData: Omit<Sale, 'id'>) => {
+export const addSale = async (shiftId: string, userId: string, saleData: Omit<Sale, 'id' | 'userId'>) => {
   const salesCollection = collection(db, 'shifts', shiftId, 'sales');
-  await addDoc(salesCollection, saleData);
+  await addDoc(salesCollection, {...saleData, userId});
 };
 
 export const updateSale = async (shiftId: string, saleId: string, updates: Partial<Sale>) => {

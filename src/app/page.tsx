@@ -36,7 +36,7 @@ export default function Home() {
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
   const [theme, setTheme] = useState('light');
-  const user = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [menu, setMenu] = useLocalStorage('menu', initialMenu);
 
   useEffect(() => {
@@ -61,6 +61,10 @@ export default function Home() {
 
   // Fetch current shift and listen for changes
   useEffect(() => {
+    if (authLoading) {
+      setView('loading');
+      return;
+    }
     if (user) {
       getCurrentShift(user.uid).then(activeShift => {
         setShift(activeShift);
@@ -70,17 +74,15 @@ export default function Home() {
             setView('orders_list');
         }
       });
-    } else if (user === null) {
+    } else {
       // User is logged out
-      setView('shift_closed'); // Or a login screen view
+      setView('shift_closed');
       setShift(null);
       setOrders([]);
       setSales([]);
-    } else {
-      // user is undefined (still loading)
-      setView('loading');
     }
-  }, [user]);
+  }, [user, authLoading]);
+
 
   // Listen to orders and sales when a shift is active
   useEffect(() => {
@@ -119,8 +121,8 @@ export default function Home() {
     }
   };
 
-  const handleSaveOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'charged'>): Promise<boolean> => {
-     if (!shift) {
+  const handleSaveOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'charged' | 'userId'>): Promise<boolean> => {
+     if (!shift || !user) {
         toast({
             variant: "destructive",
             title: "No Active Shift",
@@ -165,7 +167,7 @@ export default function Home() {
           charged: false,
           timestamp: serverTimestamp(),
         };
-        await addOrder(shift.id, newOrderPayload);
+        await addOrder(shift.id, user.uid, newOrderPayload);
         toast({
           title: "Order Saved!",
           description: `Don't forget to mark it as 'Charged' once payment is received.`,
@@ -185,14 +187,14 @@ export default function Home() {
     }
   };
   
-  const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp'>) => {
-    if (!shift) return;
+  const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp' | 'userId'>) => {
+    if (!shift || !user) return;
     try {
         const newSalePayload = {
             ...sale,
             timestamp: serverTimestamp(),
         };
-        await addSale(shift.id, newSalePayload);
+        await addSale(shift.id, user.uid, newSalePayload);
         toast({
             title: "Sale Logged",
             description: `${sale.type === 'Membership' ? sale.customerName : sale.name} sale logged.`
@@ -300,7 +302,7 @@ export default function Home() {
   };
   
   const renderView = () => {
-    if (user === undefined || view === 'loading') {
+    if (authLoading || view === 'loading') {
       return (
         <div className="flex h-screen w-full items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -308,7 +310,7 @@ export default function Home() {
       );
     }
 
-    if (user === null) {
+    if (!user) {
       return <LoginScreen onSignIn={signInWithGoogle} />;
     }
 
@@ -358,7 +360,7 @@ export default function Home() {
     );
   };
   
-  if (user === undefined) {
+  if (authLoading) {
      return (
         <div className="flex h-screen w-full items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />

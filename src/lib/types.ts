@@ -12,6 +12,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
+  userId: string;
   timestamp: Timestamp;
   charged: boolean;
   items: OrderItem;
@@ -49,6 +50,7 @@ export type MembershipDuration = '1 Month' | '3 Months' | '1 Year';
 
 export interface Sale {
   id: string;
+  userId: string;
   timestamp: Timestamp;
   type: SaleType;
   name?: string; 
@@ -60,5 +62,3 @@ export interface Sale {
 }
 
 export type AppView = 'shift_closed' | 'new_order' | 'orders_list' | 'all_orders' | 'sales' | 'shift_summary' | 'order_detail';
-
-    

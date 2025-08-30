@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 
 interface NewOrderScreenProps {
   menu: Menu;
-  onSaveOrder: (order: Omit<Order, 'id' | 'timestamp' | 'charged'>) => Promise<boolean>;
+  onSaveOrder: (order: Omit<Order, 'id' | 'timestamp' | 'charged' | 'userId'>) => Promise<boolean>;
   editingOrder: Order | null;
 }
 

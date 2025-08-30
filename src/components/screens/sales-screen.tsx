@@ -16,7 +16,7 @@ import { motion } from 'framer-motion';
 
 interface SalesScreenProps {
   sales: Sale[];
-  onSaveSale: (sale: Omit<Sale, 'id' | 'timestamp'>) => void;
+  onSaveSale: (sale: Omit<Sale, 'id' | 'timestamp' | 'userId'>) => void;
   onMarkAsCharged: (saleId: string) => void;
   onEditSale: (sale: Sale) => void;
   onDeleteSale: (saleId: string) => void;

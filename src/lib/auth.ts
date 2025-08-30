@@ -24,18 +24,20 @@ provider.setCustomParameters({
 
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null | undefined>(undefined);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setPersistence(auth, browserLocalPersistence);
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  return user;
+  return { user, loading };
 }
 
 export async function signInWithGoogle() {
