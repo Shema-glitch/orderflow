@@ -68,16 +68,19 @@ export const getCurrentShift = async (userId: string): Promise<Shift | null> => 
 export const createShift = async (userId: string): Promise<Shift> => {
     const batch = writeBatch(db);
 
-    // 1. Find all uncharged orders and sales from previous shifts for the user
+    // 1. Find all uncharged orders from previous shifts for the user
     const unchargedOrdersQuery = query(
         collectionGroup(db, 'orders'), 
         where('userId', '==', userId), 
-        where('charged', '==', false)
+        where('charged', '==', false),
+        orderBy('timestamp', 'desc')
     );
+    // 2. Find all uncharged sales from previous shifts for the user
     const unchargedSalesQuery = query(
         collectionGroup(db, 'sales'),
         where('userId', '==', userId),
-        where('charged', '==', false)
+        where('charged', '==', false),
+        orderBy('timestamp', 'desc')
     );
     
     const [unchargedOrdersSnapshot, unchargedSalesSnapshot] = await Promise.all([
@@ -85,7 +88,7 @@ export const createShift = async (userId: string): Promise<Shift> => {
         getDocs(unchargedSalesQuery)
     ]);
 
-    // 2. Create a new shift document
+    // 3. Create a new shift document
     const newShiftRef = doc(collection(shiftsCollection));
     batch.set(newShiftRef, {
         userId,
@@ -93,7 +96,7 @@ export const createShift = async (userId: string): Promise<Shift> => {
         startTimestamp: serverTimestamp(),
     });
 
-    // 3. Copy uncharged orders to the new shift and delete the old ones
+    // 4. Copy uncharged orders to the new shift and delete the old ones
     unchargedOrdersSnapshot.forEach(doc => {
         const orderData = doc.data() as Omit<Order, 'id'>;
         const newOrderRef = doc(db, 'shifts', newShiftRef.id, 'orders', doc.id);
@@ -101,7 +104,7 @@ export const createShift = async (userId: string): Promise<Shift> => {
         batch.delete(doc.ref); // Delete the old order
     });
 
-    // 4. Copy uncharged sales to the new shift and delete the old ones
+    // 5. Copy uncharged sales to the new shift and delete the old ones
     unchargedSalesSnapshot.forEach(doc => {
         const saleData = doc.data() as Omit<Sale, 'id'>;
         const newSaleRef = doc(db, 'shifts', newShiftRef.id, 'sales', doc.id);
@@ -109,10 +112,10 @@ export const createShift = async (userId: string): Promise<Shift> => {
         batch.delete(doc.ref); // Delete the old sale
     });
 
-    // 5. Commit the batch write
+    // 6. Commit the batch write
     await batch.commit();
 
-    // 6. Return the newly created shift object
+    // 7. Return the newly created shift object
     return {
         id: newShiftRef.id,
         userId,
@@ -186,5 +189,3 @@ export const deleteSale = async (shiftId: string, saleId: string) => {
   const saleRef = doc(db, 'shifts', shiftId, 'sales', saleId);
   await deleteDoc(saleRef);
 };
-
-    
