@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { LogOut, Clock, Calendar, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import type { Shift } from "@/lib/types";
+import type { Shift, Order, Sale } from "@/lib/types";
 import { useEffect, useState } from "react";
 import {
   AlertDialog,
@@ -21,11 +21,14 @@ import {
 
 interface ShiftSummaryScreenProps {
   shift: Shift | null;
+  orders: Order[];
+  sales: Sale[];
   onCloseShift: () => void;
 }
 
-export default function ShiftSummaryScreen({ shift, onCloseShift }: ShiftSummaryScreenProps) {
+export default function ShiftSummaryScreen({ shift, orders, sales, onCloseShift }: ShiftSummaryScreenProps) {
   const [elapsedTime, setElapsedTime] = useState("");
+  const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!shift?.startTimestamp) return;
@@ -65,6 +68,20 @@ export default function ShiftSummaryScreen({ shift, onCloseShift }: ShiftSummary
         hour12: true
     });
   }
+  
+  const unchargedOrdersCount = orders.filter(o => !o.charged).length;
+  const unchargedSalesCount = sales.filter(s => !s.charged).length;
+  const totalUncharged = unchargedOrdersCount + unchargedSalesCount;
+
+  const handleCloseAttempt = () => {
+    if (totalUncharged > 0) {
+      setIsWarningDialogOpen(true);
+    } else {
+      // This will trigger the original confirmation dialog
+      return true;
+    }
+    return false;
+  }
 
   return (
     <div className="w-full">
@@ -102,6 +119,11 @@ export default function ShiftSummaryScreen({ shift, onCloseShift }: ShiftSummary
                     size="lg"
                     variant="destructive"
                     className="w-full py-6 text-lg rounded-full shadow-lg"
+                    onClick={(e) => {
+                       if (!handleCloseAttempt()) {
+                           e.preventDefault();
+                       }
+                    }}
                 >
                     <LogOut className="mr-3 h-6 w-6" />
                     Close Shift
@@ -125,8 +147,27 @@ export default function ShiftSummaryScreen({ shift, onCloseShift }: ShiftSummary
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+
+         <AlertDialog open={isWarningDialogOpen} onOpenChange={setIsWarningDialogOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center">
+                        <AlertTriangle className="mr-2 text-yellow-500" />
+                        Uncharged Items Pending
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                        You have {totalUncharged} uncharged item(s) ({unchargedOrdersCount} orders, {unchargedSalesCount} sales). Please charge all items before closing your shift.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogAction onClick={() => setIsWarningDialogOpen(false)}>OK</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
       </div>
 
     </div>
   );
 }
+
+    

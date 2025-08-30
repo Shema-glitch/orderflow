@@ -87,8 +87,8 @@ export default function Home() {
   // Listen to orders and sales when a shift is active
   useEffect(() => {
     if (shift && user) {
-      const unsubscribeOrders = listenToOrders(shift.id, user.uid, setOrders);
-      const unsubscribeSales = listenToSales(shift.id, user.uid, setSales);
+      const unsubscribeOrders = listenToOrders(shift.id, setOrders);
+      const unsubscribeSales = listenToSales(shift.id, setSales);
       
       // Cleanup listeners on component unmount or shift change
       return () => {
@@ -326,7 +326,7 @@ export default function Home() {
       case 'sales':
         return <SalesScreen sales={sales} onSaveSale={handleSaveSale} onMarkAsCharged={handleMarkSaleAsCharged} onEditSale={handleEditSale} onDeleteSale={handleDeleteSale} />;
       case 'shift_summary':
-        return <ShiftSummaryScreen shift={shift} onCloseShift={handleCloseShift} />;
+        return <ShiftSummaryScreen shift={shift} orders={orders} sales={sales} onCloseShift={handleCloseShift} />;
       default:
         return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
     }
@@ -437,3 +437,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
