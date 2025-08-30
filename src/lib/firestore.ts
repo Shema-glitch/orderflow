@@ -71,7 +71,9 @@ export const closeShift = async (shiftId: string): Promise<void> => {
 
 export const listenToOrders = (shiftId: string, userId: string, callback: (orders: Order[]) => void) => {
   const ordersCollection = collection(db, 'shifts', shiftId, 'orders');
-  const q = query(ordersCollection, where('userId', '==', userId), orderBy('timestamp', 'desc'));
+  // The security rules already enforce that a user can only access a shift they own,
+  // so we don't need to query by userId here again.
+  const q = query(ordersCollection, orderBy('timestamp', 'desc'));
   
   return onSnapshot(q, (querySnapshot) => {
     const orders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
@@ -101,7 +103,9 @@ export const deleteOrder = async (shiftId: string, orderId: string) => {
 
 export const listenToSales = (shiftId: string, userId: string, callback: (sales: Sale[]) => void) => {
   const salesCollection = collection(db, 'shifts', shiftId, 'sales');
-  const q = query(salesCollection, where('userId', '==', userId), orderBy('timestamp', 'desc'));
+  // The security rules already enforce that a user can only access a shift they own,
+  // so we don't need to query by userId here again.
+  const q = query(salesCollection, orderBy('timestamp', 'desc'));
   
   return onSnapshot(q, (querySnapshot) => {
     const sales = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Sale));
