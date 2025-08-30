@@ -6,7 +6,7 @@ import type { Order } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Clock, Trash2, Edit, MoreVertical, AlertTriangle, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Trash2, Edit, MoreVertical, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -24,7 +24,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
 
@@ -55,14 +54,14 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
 
   return (
     <Card 
-        className={`w-full shadow-md transition-all duration-300 border-l-4 ${order.charged ? 'border-success' : 'border-destructive'} cursor-pointer hover:shadow-lg dark:shadow-none dark:hover:bg-white/5`}
+        className="w-full shadow-md transition-all duration-300 hover:shadow-lg dark:shadow-none dark:hover:bg-white/5"
         onClick={() => onViewOrder(order)}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-6">
         <div className="flex items-start justify-between space-x-4">
           <div className="flex items-center space-x-4 flex-1">
-            <Avatar className="h-12 w-12">
-              <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">{initials}</AvatarFallback>
+            <Avatar className="h-12 w-12 text-lg">
+              <AvatarFallback className="bg-primary/10 text-primary font-bold">{initials}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
               <div className="flex justify-between items-start">
@@ -72,14 +71,14 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
                   </h3>
                   <p className="text-sm text-muted-foreground -mt-1">{order.items.category}</p>
                 </div>
-                <div className="text-xs text-muted-foreground font-mono text-right pl-2">
+                 <div className="text-xs text-muted-foreground font-mono text-right pl-2">
                   {formattedTime}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center -mr-2" onClick={e => e.stopPropagation()}>
             <AlertDialog open={isDeleting || isUncharging} onOpenChange={isUncharging ? setIsUncharging : setIsDeleting}>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -93,12 +92,10 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
                     <span>Edit</span>
                   </DropdownMenuItem>
                   {order.charged && (
-                    <AlertDialogTrigger asChild>
-                        <DropdownMenuItem onSelect={() => setIsUncharging(true)}>
-                            <RefreshCw className="mr-2 h-4 w-4" />
-                            <span>Uncharge</span>
-                        </DropdownMenuItem>
-                    </AlertDialogTrigger>
+                     <DropdownMenuItem onSelect={() => setIsUncharging(true)}>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <span>Uncharge</span>
+                    </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   <AlertDialogTrigger asChild>
@@ -130,7 +127,7 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
           </div>
         </div>
 
-        <div className="space-y-3 text-sm text-muted-foreground mt-4 pl-1">
+        <div className="space-y-4 text-sm text-muted-foreground mt-4">
            {Object.entries(order.items.selections).some(([_, items]) => Array.isArray(items) && items.length > 0) &&
               <div className="flex items-start">
                 <ShoppingBasket className="mr-3 mt-1 h-4 w-4 flex-shrink-0 text-primary/80"/>
@@ -155,25 +152,26 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
           )}
 
           {hasExtraToppings && (
-            <div className="pt-1">
-              <Badge variant="destructive" className="flex items-center gap-1.5 w-fit">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                Additional Topping Cost
-              </Badge>
-            </div>
+            <Badge variant="destructive" className="flex items-center gap-1.5 w-fit">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Additional Topping Cost
+            </Badge>
           )}
         </div>
         
-        <div className="mt-4 flex justify-end" onClick={e => e.stopPropagation()}>
+        <div className="mt-6 flex justify-between items-center" onClick={e => e.stopPropagation()}>
+           <Badge variant={order.charged ? 'success' : 'destructive'}>
+              {order.charged ? 'Charged' : 'Not Charged'}
+            </Badge>
             {order.charged ? (
                 <Button variant="ghost" size="sm" className="text-success pointer-events-none">
                     <CheckCircle2 className="mr-2 h-5 w-5"/>
-                    Charged
+                    Paid
                 </Button>
             ) : (
                 <Button size="sm" onClick={() => onMarkAsCharged(order.id)}>
                     <Circle className="mr-2 h-5 w-5"/>
-                    Charge
+                    Mark as Charged
                 </Button>
             )}
         </div>

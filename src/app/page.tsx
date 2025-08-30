@@ -296,7 +296,7 @@ export default function Home() {
           <BottomNav activeView={view as AppView} setView={setView} />
           <Button
             size="lg"
-            className="fixed bottom-24 right-6 h-16 w-16 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground z-50"
+            className="fixed bottom-24 right-6 h-16 w-16 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground z-50 ring-4 ring-primary/30 hover:ring-primary/40 dark:ring-offset-background"
             onClick={() => setShowNewEntry(true)}
             aria-label="Create New Order"
           >

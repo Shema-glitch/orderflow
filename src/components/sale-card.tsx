@@ -1,12 +1,12 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
 import type { Sale } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, Dumbbell, Package, Droplet, Circle } from 'lucide-react';
+import { CheckCircle2, Dumbbell, Package, Droplet, Circle } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 
 interface SaleCardProps {
@@ -31,47 +31,43 @@ export default function SaleCard({ sale, onMarkAsCharged }: SaleCardProps) {
   }
   
   const getIcon = () => {
-      if(isMembership) return <Dumbbell className="mr-2 h-4 w-4" />;
-      if(sale.name === 'Water Bottle') return <Droplet className="mr-2 h-4 w-4" />;
-      if(sale.name === 'Snack') return <Package className="mr-2 h-4 w-4" />;
+      if(isMembership) return <Dumbbell className="h-4 w-4 text-muted-foreground" />;
+      if(sale.name === 'Water Bottle') return <Droplet className="h-4 w-4 text-muted-foreground" />;
+      if(sale.name === 'Snack') return <Package className="h-4 w-4 text-muted-foreground" />;
       return null;
   }
 
   return (
-    <Card className={`w-full shadow-md transition-all duration-500 border-l-4 ${sale.charged ? 'border-success' : 'border-destructive'} dark:shadow-none dark:hover:bg-white/5`}>
-      <CardContent className="p-4">
+    <Card className="w-full shadow-md transition-all duration-300 hover:shadow-lg dark:shadow-none dark:hover:bg-white/5">
+      <CardContent className="p-6">
         <div className="flex items-start justify-between">
             <div className='flex-1 flex items-center space-x-4'>
-                 <Avatar className="h-12 w-12">
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">{getInitials()}</AvatarFallback>
+                 <Avatar className="h-12 w-12 text-lg">
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{getInitials()}</AvatarFallback>
                  </Avatar>
-                 <div>
+                 <div className="flex-1">
                     <h3 className="font-bold text-xl text-foreground">
                         {name}
                     </h3>
-                    <p className="text-sm text-muted-foreground -mt-1 flex items-center">
+                    <div className="text-sm text-muted-foreground -mt-1 flex items-center gap-2">
                         {getIcon()}
-                        {isMembership ? sale.membershipType : sale.type}
-                    </p>
+                        <span>{isMembership ? sale.membershipType : sale.type}</span>
+                        <span className="font-mono text-xs">· {formattedTime}</span>
+                    </div>
                  </div>
-            </div>
-            <div className="ml-4">
-                <Button 
-                    variant={sale.charged ? 'ghost' : 'destructive'}
-                    size="sm"
-                    className={`rounded-full transition-colors ${sale.charged ? 'text-success' : ''}`}
-                    onClick={() => !sale.charged && onMarkAsCharged(sale.id)}
-                    disabled={sale.charged}
-                >
-                {sale.charged ? <CheckCircle2 className="mr-2 h-5 w-5"/> : <Circle className="mr-2 h-5 w-5" />}
-                {sale.charged ? 'Charged' : 'Charge'}
-                </Button>
             </div>
         </div>
 
-        <div className="flex items-center pt-4 text-sm text-muted-foreground pl-1">
-            <Clock className="mr-3 h-4 w-4 text-primary/80"/>
-             <span className="text-xs font-mono bg-muted px-2 py-1 rounded-md">{formattedTime}</span>
+        <div className="mt-6 flex justify-between items-center">
+            <Badge variant={sale.charged ? 'success' : 'destructive'}>
+              {sale.charged ? 'Charged' : 'Not Charged'}
+            </Badge>
+            {!sale.charged && (
+              <Button size="sm" onClick={() => onMarkAsCharged(sale.id)}>
+                  <Circle className="mr-2 h-5 w-5"/>
+                  Mark as Charged
+              </Button>
+            )}
         </div>
         
       </CardContent>
