@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 
 interface NewOrderScreenProps {
   menu: Menu;
-  onSaveOrder: (order: Omit<Order, 'id' | 'timestamp' | 'charged'>) => boolean;
+  onSaveOrder: (order: Omit<Order, 'id' | 'timestamp' | 'charged'>) => Promise<boolean>;
   editingOrder: Order | null;
 }
 
@@ -35,7 +35,9 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
       setNotes(editingOrder.notes || '');
     } else {
       // Reset state when not editing
-      handleBack();
+      if (!editingOrder) {
+        handleBack();
+      }
     }
   }, [editingOrder, menu.categories]);
 
@@ -60,9 +62,9 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
     });
   };
 
-  const handleSaveOrderClick = () => {
+  const handleSaveOrderClick = async () => {
     if (selectedCategory) {
-      const success = onSaveOrder({
+      const success = await onSaveOrder({
         customerName,
         notes,
         items: {

@@ -29,10 +29,10 @@ interface OrderDetailScreenProps {
 }
 
 export default function OrderDetailScreen({ order, onClose, onMarkAsCharged, onUnchargeOrder, onDeleteOrder, onEditOrder }: OrderDetailScreenProps) {
-  const formattedTime = new Date(order.timestamp).toLocaleString(undefined, {
+  const formattedTime = order.timestamp ? new Date(order.timestamp.toDate()).toLocaleString(undefined, {
     dateStyle: 'medium',
     timeStyle: 'short',
-  });
+  }) : '...';
   
   const hasExtraToppings = 
     order.items.category === 'Protein Shake' && 

@@ -48,7 +48,7 @@ export default function SaleCard({ sale, onMarkAsCharged, onEdit, onDelete }: Sa
     if(action === 'delete') onDelete(sale.id);
   }
 
-  const formattedTime = new Date(sale.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+  const formattedTime = sale.timestamp ? new Date(sale.timestamp.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '...';
 
   const getInitials = () => {
     if (isMembership && sale.customerName) {

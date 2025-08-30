@@ -42,7 +42,7 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
     return null;
   }
 
-  const formattedTime = new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+  const formattedTime = order.timestamp ? new Date(order.timestamp.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : '...';
   const initials = order.customerName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   
   const hasExtraToppings = 

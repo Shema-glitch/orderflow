@@ -21,13 +21,15 @@ import type { User } from 'firebase/auth';
 import LoginScreen from '@/components/screens/login-screen';
 import OrderDetailScreen from '@/components/screens/order-detail-screen';
 import { ToastAction } from "@/components/ui/toast"
+import { getCurrentShift, createShift, closeShift, listenToOrders, addOrder, updateOrder, deleteOrder, listenToSales, addSale, deleteSale, updateSale } from '@/lib/firestore';
+import { serverTimestamp } from 'firebase/firestore';
 
 
 export default function Home() {
   const { toast } = useToast();
-  const [shift, setShift] = useLocalStorage<Shift>('shift-status', { isOpen: false, startTimestamp: null });
-  const [orders, setOrders] = useLocalStorage<Order[]>('orders', []);
-  const [sales, setSales] = useLocalStorage<Sale[]>('sales', []);
+  const [shift, setShift] = useState<Shift | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
   const [view, setView] = useState<AppView | 'loading'>('loading');
   const [showNewEntry, setShowNewEntry] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -57,30 +59,72 @@ export default function Home() {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
+  // Fetch current shift and listen for changes
+  useEffect(() => {
+    if (user) {
+      getCurrentShift(user.uid).then(activeShift => {
+        setShift(activeShift);
+        if (!activeShift) {
+            setView('shift_closed');
+        } else {
+            setView('orders_list');
+        }
+      });
+    } else {
+      setView('loading');
+      setShift(null);
+      setOrders([]);
+      setSales([]);
+    }
+  }, [user]);
+
+  // Listen to orders and sales when a shift is active
+  useEffect(() => {
+    if (shift) {
+      const unsubscribeOrders = listenToOrders(shift.id, setOrders);
+      const unsubscribeSales = listenToSales(shift.id, setSales);
+      
+      // Cleanup listeners on component unmount or shift change
+      return () => {
+        unsubscribeOrders();
+        unsubscribeSales();
+      };
+    }
+  }, [shift]);
+
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
   };
-
-  useEffect(() => {
-    if (user !== null) { // Only set view if user is determined
-      setView(shift.isOpen ? 'orders_list' : 'shift_closed');
+  
+  const handleOpenShift = async () => {
+    if (user) {
+      const newShift = await createShift(user.uid);
+      setShift(newShift);
+      setView('orders_list');
     }
-  }, [shift.isOpen, user]);
-
-  const handleOpenShift = () => {
-    setShift({ isOpen: true, startTimestamp: new Date().toISOString() });
-    setView('orders_list');
   };
 
-  const handleCloseShift = () => {
-    setShift({ isOpen: false, startTimestamp: null });
-    setOrders([]);
-    setSales([]);
-    setEditingOrder(null);
-    setView('shift_closed');
+  const handleCloseShift = async () => {
+    if (shift) {
+      await closeShift(shift.id);
+      setShift(null);
+      setOrders([]);
+      setSales([]);
+      setEditingOrder(null);
+      setView('shift_closed');
+    }
   };
 
-  const handleSaveOrder = (orderData: Omit<Order, 'id' | 'timestamp' | 'charged'>): boolean => {
+  const handleSaveOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'charged'>): Promise<boolean> => {
+     if (!shift) {
+        toast({
+            variant: "destructive",
+            title: "No Active Shift",
+            description: "Cannot save order because there is no active shift.",
+        });
+        return false;
+     }
+
      if (!orderData.customerName) {
       toast({
         variant: "destructive",
@@ -102,44 +146,61 @@ export default function Home() {
       return false; // Indicate failure
     }
 
-    if (editingOrder) {
-      // Update existing order
-      setOrders(prevOrders => prevOrders.map(o => o.id === editingOrder.id ? {...o, ...orderData, id: editingOrder.id} : o));
-      toast({
-        title: "Order Updated!",
-        description: `Changes to ${orderData.customerName}'s order have been saved.`,
+    try {
+      if (editingOrder) {
+        // Update existing order
+        await updateOrder(shift.id, editingOrder.id, orderData);
+        toast({
+          title: "Order Updated!",
+          description: `Changes to ${orderData.customerName}'s order have been saved.`,
+        });
+      } else {
+        // Create new order
+        const newOrderPayload = {
+          ...orderData,
+          charged: false,
+          timestamp: serverTimestamp(),
+        };
+        await addOrder(shift.id, newOrderPayload);
+        toast({
+          title: "Order Saved!",
+          description: `Don't forget to mark it as 'Charged' once payment is received.`,
+        });
+      }
+      setShowNewEntry(false);
+      setEditingOrder(null);
+      return true; // Indicate success
+    } catch (error) {
+       toast({
+        variant: "destructive",
+        title: "Save Failed",
+        description: "Could not save the order. Please try again.",
       });
-    } else {
-      // Create new order
-      const newOrder: Order = {
-        ...orderData,
-        id: `order-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        timestamp: new Date().toISOString(),
-        charged: false,
-      };
-      setOrders(prevOrders => [newOrder, ...prevOrders]);
-      toast({
-        title: "Order Saved!",
-        description: `Don't forget to mark it as 'Charged' once payment is received.`,
-      });
+      console.error("Error saving order: ", error);
+      return false;
     }
-    
-    setShowNewEntry(false);
-    setEditingOrder(null);
-    return true; // Indicate success
   };
   
-  const handleSaveSale = (sale: Omit<Sale, 'id' | 'timestamp'>) => {
-    const newSale: Sale = {
-      ...sale,
-      id: `sale-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      timestamp: new Date().toISOString(),
+  const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp'>) => {
+    if (!shift) return;
+    try {
+        const newSalePayload = {
+            ...sale,
+            timestamp: serverTimestamp(),
+        };
+        await addSale(shift.id, newSalePayload);
+        toast({
+            title: "Sale Logged",
+            description: `${sale.type === 'Membership' ? sale.customerName : sale.name} sale logged.`
+        });
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Log Sale Failed",
+            description: "Could not log the sale. Please try again.",
+        });
+        console.error("Error logging sale: ", error);
     }
-    setSales(prevSales => [newSale, ...prevSales]);
-    toast({
-      title: "Sale Logged",
-      description: `${sale.type === 'Membership' ? sale.membershipType : sale.name} sale logged.`
-    });
   };
   
   const handleEditSale = (sale: Sale) => {
@@ -151,22 +212,28 @@ export default function Home() {
     });
   };
 
-  const handleDeleteSale = (saleId: string) => {
+  const handleDeleteSale = async (saleId: string) => {
+    if (!shift) return;
     const saleToDelete = sales.find(s => s.id === saleId);
     if (!saleToDelete) return;
 
-    const originalSales = [...sales];
-    setSales(prevSales => prevSales.filter(s => s.id !== saleId));
-
-    toast({
-      title: "Sale Deleted",
-      description: `${saleToDelete.type === 'Membership' ? saleToDelete.customerName : saleToDelete.name} sale has been removed.`,
-      action: (
-        <ToastAction altText="Undo" onClick={() => setSales(originalSales)}>
-          Undo
-        </ToastAction>
-      ),
-    });
+    const originalSales = [...sales]; // Keep for undo, though direct Firestore manipulation is better
+    try {
+        await deleteSale(shift.id, saleId);
+        toast({
+            title: "Sale Deleted",
+            description: `${saleToDelete.type === 'Membership' ? saleToDelete.customerName : saleToDelete.name} sale has been removed.`,
+            // TODO: Undo requires re-adding the document to Firestore, which is more complex.
+            // For now, we remove the direct undo action from the toast.
+        });
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "Delete Failed",
+            description: "Could not delete the sale. Please try again.",
+        });
+        console.error("Error deleting sale: ", error);
+    }
   };
 
 
@@ -176,39 +243,47 @@ export default function Home() {
     setShowNewEntry(true);
   };
 
-  const handleMarkOrderAsCharged = (orderId: string) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId ? { ...order, charged: true } : order
-      )
-    );
-     setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: true } : prev);
+  const handleMarkOrderAsCharged = async (orderId: string) => {
+    if (!shift) return;
+    try {
+      await updateOrder(shift.id, orderId, { charged: true });
+      setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: true } : prev);
+    } catch (error) {
+      console.error("Error marking order as charged: ", error);
+    }
   };
   
-  const handleUnchargeOrder = (orderId: string) => {
-    setOrders(prevOrders =>
-      prevOrders.map(order =>
-        order.id === orderId ? { ...order, charged: false } : order
-      )
-    );
-    setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: false } : prev);
+  const handleUnchargeOrder = async (orderId: string) => {
+    if (!shift) return;
+    try {
+      await updateOrder(shift.id, orderId, { charged: false });
+      setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: false } : prev);
+    } catch (error) {
+       console.error("Error uncharging order: ", error);
+    }
   };
 
-  const handleDeleteOrder = (orderId: string) => {
-    setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
-    setViewingOrder(null);
-    toast({
-      title: "Order Deleted",
-      description: "The order has been removed from your list.",
-    });
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!shift) return;
+    try {
+      await deleteOrder(shift.id, orderId);
+      setViewingOrder(null);
+      toast({
+        title: "Order Deleted",
+        description: "The order has been removed from your list.",
+      });
+    } catch (error) {
+      console.error("Error deleting order: ", error);
+    }
   };
 
-  const handleMarkSaleAsCharged = (saleId: string) => {
-    setSales(prevSales =>
-      prevSales.map(sale =>
-        sale.id === saleId ? { ...sale, charged: true } : sale
-      )
-    );
+  const handleMarkSaleAsCharged = async (saleId: string) => {
+    if (!shift) return;
+    try {
+        await updateSale(shift.id, saleId, { charged: true });
+    } catch (error) {
+        console.error("Error marking sale as charged: ", error);
+    }
   };
 
   const closeNewEntryScreen = () => {
@@ -221,21 +296,19 @@ export default function Home() {
   };
   
   const renderView = () => {
-    if (user === null) {
-      return <LoginScreen onSignIn={signInWithGoogle} />;
-    }
-
-    if (view === 'loading') {
+    if (user === undefined || view === 'loading') {
       return (
         <div className="flex h-screen w-full items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       );
     }
-    if (view === 'shift_closed') {
-      return <ShiftScreen onOpenShift={handleOpenShift} />;
+
+    if (user === null) {
+      return <LoginScreen onSignIn={signInWithGoogle} />;
     }
-    if (!shift.isOpen) {
+
+    if (!shift) {
       return <ShiftScreen onOpenShift={handleOpenShift} />;
     }
     
@@ -243,17 +316,13 @@ export default function Home() {
       case 'orders_list':
         return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
       case 'all_orders':
-        return <AllOrdersScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
+        return <AllOrdersScreen orders={orders} onMarkAsCharged={handleMarkAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
       case 'sales':
         return <SalesScreen sales={sales} onSaveSale={handleSaveSale} onMarkAsCharged={handleMarkSaleAsCharged} onEditSale={handleEditSale} onDeleteSale={handleDeleteSale} />;
       case 'shift_summary':
         return <ShiftSummaryScreen shift={shift} onCloseShift={handleCloseShift} />;
       default:
-        return (
-          <div className="flex h-screen w-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        );
+        return <OrdersListScreen orders={orders} onMarkAsCharged={handleMarkOrderAsCharged} onDeleteOrder={handleDeleteOrder} onEditOrder={handleEditOrder} onUnchargeOrder={handleUnchargeOrder} onViewOrder={handleViewOrder} />;
     }
   };
 
@@ -284,13 +353,21 @@ export default function Home() {
       />
     );
   };
+  
+  if (user === undefined) {
+     return (
+        <div className="flex h-screen w-full items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground font-sans">
       <header className="w-full max-w-md mx-auto p-4 flex justify-between items-center bg-card shadow-sm z-50">
         <div>
           <h1 className="text-xl font-bold text-primary">OrderFlow Lite</h1>
-          {user && <p className="text-xs text-muted-foreground">Current Shift</p>}
+          {user && shift && <p className="text-xs text-muted-foreground">Current Shift</p>}
         </div>
         <div className="flex items-center">
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
@@ -320,7 +397,7 @@ export default function Home() {
       {showNewEntry && renderNewEntryScreen()}
       {renderOrderDetailScreen()}
 
-      {user && shift.isOpen && !showNewEntry && !viewingOrder && (
+      {user && shift && !showNewEntry && !viewingOrder && (
         <>
           <BottomNav activeView={view as AppView} setView={setView} />
           <Button

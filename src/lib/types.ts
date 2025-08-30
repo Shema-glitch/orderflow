@@ -1,4 +1,6 @@
 
+import type { Timestamp } from 'firebase/firestore';
+
 export interface OrderItemSelection {
   [subcategoryName: string]: string[];
 }
@@ -10,7 +12,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
-  timestamp: string;
+  timestamp: Timestamp;
   charged: boolean;
   items: OrderItem;
   customerName: string;
@@ -34,8 +36,11 @@ export interface Menu {
 }
 
 export interface Shift {
+    id: string;
     isOpen: boolean;
-    startTimestamp: string | null;
+    startTimestamp: Timestamp;
+    endTimestamp?: Timestamp;
+    userId: string;
 }
 
 export type SaleType = 'Quick Sale' | 'Membership';
@@ -44,7 +49,7 @@ export type MembershipDuration = '1 Month' | '3 Months' | '1 Year';
 
 export interface Sale {
   id: string;
-  timestamp: string;
+  timestamp: Timestamp;
   type: SaleType;
   name?: string; 
   quantity?: number;

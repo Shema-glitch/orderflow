@@ -20,7 +20,7 @@ import {
 
 
 interface ShiftSummaryScreenProps {
-  shift: Shift;
+  shift: Shift | null;
   onCloseShift: () => void;
 }
 
@@ -28,11 +28,11 @@ export default function ShiftSummaryScreen({ shift, onCloseShift }: ShiftSummary
   const [elapsedTime, setElapsedTime] = useState("");
 
   useEffect(() => {
-    if (!shift.startTimestamp) return;
+    if (!shift?.startTimestamp) return;
 
     const timer = setInterval(() => {
       const now = new Date();
-      const start = new Date(shift.startTimestamp!);
+      const start = shift.startTimestamp.toDate();
       const diff = now.getTime() - start.getTime();
 
       const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -45,11 +45,11 @@ export default function ShiftSummaryScreen({ shift, onCloseShift }: ShiftSummary
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [shift.startTimestamp]);
+  }, [shift?.startTimestamp]);
 
   const getStartDate = () => {
-    if (!shift.startTimestamp) return "N/A";
-    return new Date(shift.startTimestamp).toLocaleDateString(undefined, {
+    if (!shift?.startTimestamp) return "N/A";
+    return shift.startTimestamp.toDate().toLocaleDateString(undefined, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -58,8 +58,8 @@ export default function ShiftSummaryScreen({ shift, onCloseShift }: ShiftSummary
   };
   
   const getStartTime = () => {
-    if (!shift.startTimestamp) return "N/A";
-    return new Date(shift.startTimestamp).toLocaleTimeString(undefined, {
+    if (!shift?.startTimestamp) return "N/A";
+    return shift.startTimestamp.toDate().toLocaleTimeString(undefined, {
         hour: '2-digit',
         minute: '2-digit',
         hour12: true
