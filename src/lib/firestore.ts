@@ -69,9 +69,9 @@ export const closeShift = async (shiftId: string): Promise<void> => {
 
 // ORDER MANAGEMENT
 
-export const listenToOrders = (shiftId: string, callback: (orders: Order[]) => void) => {
+export const listenToOrders = (shiftId: string, userId: string, callback: (orders: Order[]) => void) => {
   const ordersCollection = collection(db, 'shifts', shiftId, 'orders');
-  const q = query(ordersCollection, orderBy('timestamp', 'desc'));
+  const q = query(ordersCollection, where('userId', '==', userId), orderBy('timestamp', 'desc'));
   
   return onSnapshot(q, (querySnapshot) => {
     const orders = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
@@ -99,9 +99,9 @@ export const deleteOrder = async (shiftId: string, orderId: string) => {
 
 // SALE MANAGEMENT
 
-export const listenToSales = (shiftId: string, callback: (sales: Sale[]) => void) => {
+export const listenToSales = (shiftId: string, userId: string, callback: (sales: Sale[]) => void) => {
   const salesCollection = collection(db, 'shifts', shiftId, 'sales');
-  const q = query(salesCollection, orderBy('timestamp', 'desc'));
+  const q = query(salesCollection, where('userId', '==', userId), orderBy('timestamp', 'desc'));
   
   return onSnapshot(q, (querySnapshot) => {
     const sales = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Sale));

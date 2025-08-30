@@ -86,9 +86,9 @@ export default function Home() {
 
   // Listen to orders and sales when a shift is active
   useEffect(() => {
-    if (shift) {
-      const unsubscribeOrders = listenToOrders(shift.id, setOrders);
-      const unsubscribeSales = listenToSales(shift.id, setSales);
+    if (shift && user) {
+      const unsubscribeOrders = listenToOrders(shift.id, user.uid, setOrders);
+      const unsubscribeSales = listenToSales(shift.id, user.uid, setSales);
       
       // Cleanup listeners on component unmount or shift change
       return () => {
@@ -96,7 +96,7 @@ export default function Home() {
         unsubscribeSales();
       };
     }
-  }, [shift]);
+  }, [shift, user]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
