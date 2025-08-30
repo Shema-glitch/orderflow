@@ -15,7 +15,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
 
@@ -163,7 +162,7 @@ export default function ShiftSummaryScreen({ shift, orders, sales, onCloseShift 
                     <AlertDialogAction onClick={() => {
                         onCloseShift(true); // force close
                         setIsWarningDialogOpen(false);
-                    }}>
+                    }} className="bg-destructive hover:bg-destructive/90">
                         Close Shift Anyway
                     </AlertDialogAction>
                 </AlertDialogFooter>

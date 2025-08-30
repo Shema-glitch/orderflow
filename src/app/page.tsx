@@ -120,9 +120,20 @@ export default function Home() {
   const handleOpenShift = async () => {
     if (user) {
       setView('loading');
-      const newShift = await createShift(user.uid);
-      setShift(newShift);
-      setView('orders_list');
+      try {
+        const newShift = await createShift(user.uid);
+        setShift(newShift);
+        setView('orders_list');
+      } catch (error) {
+        console.error("Error opening shift:", error);
+        toast({
+          variant: "destructive",
+          title: "Could Not Open Shift",
+          description: "There was a problem opening a new shift. Please check your connection and try again."
+        });
+        // If it fails, put them back to the closed shift screen
+        setView('shift_closed');
+      }
     }
   };
 
@@ -132,8 +143,9 @@ export default function Home() {
       const unchargedSalesCount = sales.filter(s => !s.charged).length;
       
       if (!force && (unchargedOrdersCount > 0 || unchargedSalesCount > 0)) {
-        // This will be handled by the warning dialog in ShiftSummaryScreen
-        // which now controls the flow. Returning here prevents closing.
+        // This is handled by the warning dialog in ShiftSummaryScreen,
+        // which calls this function with force=true if the user proceeds.
+        // Returning here prevents closing and relies on the dialog to control the flow.
         return;
       }
       await closeShift(shift.id);

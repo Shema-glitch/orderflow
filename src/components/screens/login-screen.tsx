@@ -25,7 +25,7 @@ export default function LoginScreen({ onSignIn }: LoginScreenProps) {
     setLoading(true);
     try {
       await signInWithGoogle();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Sign-in Failed",
@@ -41,11 +41,15 @@ export default function LoginScreen({ onSignIn }: LoginScreenProps) {
     setLoading(true);
     try {
       await signInWithEmailPassword(email, password);
-    } catch (error) {
+    } catch (error: any) {
+       let description = "An unknown error occurred.";
+       if (error.code === 'auth/invalid-credential') {
+          description = "Invalid email or password. Please try again.";
+       }
        toast({
         variant: "destructive",
         title: "Sign-in Failed",
-        description: "Invalid email or password. Please try again.",
+        description,
       });
     } finally {
       setLoading(false);
@@ -61,7 +65,7 @@ export default function LoginScreen({ onSignIn }: LoginScreenProps) {
         title: "Account Created!",
         description: "You have been successfully signed up.",
       });
-    } catch (error) {
+    } catch (error: any) {
        toast({
         variant: "destructive",
         title: "Sign-up Failed",
