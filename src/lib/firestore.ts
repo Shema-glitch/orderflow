@@ -66,18 +66,59 @@ export const getCurrentShift = async (userId: string): Promise<Shift | null> => 
 };
 
 export const createShift = async (userId: string): Promise<Shift> => {
-  const newShiftRef = await addDoc(shiftsCollection, {
-    userId,
-    isOpen: true,
-    startTimestamp: serverTimestamp(),
-  });
+    const batch = writeBatch(db);
 
-  return {
-      id: newShiftRef.id,
-      userId,
-      isOpen: true,
-      startTimestamp: Timestamp.now()
-  };
+    // 1. Find all uncharged orders and sales from previous shifts for the user
+    const unchargedOrdersQuery = query(
+        collectionGroup(db, 'orders'), 
+        where('userId', '==', userId), 
+        where('charged', '==', false)
+    );
+    const unchargedSalesQuery = query(
+        collectionGroup(db, 'sales'),
+        where('userId', '==', userId),
+        where('charged', '==', false)
+    );
+    
+    const [unchargedOrdersSnapshot, unchargedSalesSnapshot] = await Promise.all([
+        getDocs(unchargedOrdersQuery),
+        getDocs(unchargedSalesQuery)
+    ]);
+
+    // 2. Create a new shift document
+    const newShiftRef = doc(collection(shiftsCollection));
+    batch.set(newShiftRef, {
+        userId,
+        isOpen: true,
+        startTimestamp: serverTimestamp(),
+    });
+
+    // 3. Copy uncharged orders to the new shift and delete the old ones
+    unchargedOrdersSnapshot.forEach(doc => {
+        const orderData = doc.data() as Omit<Order, 'id'>;
+        const newOrderRef = doc(db, 'shifts', newShiftRef.id, 'orders', doc.id);
+        batch.set(newOrderRef, orderData);
+        batch.delete(doc.ref); // Delete the old order
+    });
+
+    // 4. Copy uncharged sales to the new shift and delete the old ones
+    unchargedSalesSnapshot.forEach(doc => {
+        const saleData = doc.data() as Omit<Sale, 'id'>;
+        const newSaleRef = doc(db, 'shifts', newShiftRef.id, 'sales', doc.id);
+        batch.set(newSaleRef, saleData);
+        batch.delete(doc.ref); // Delete the old sale
+    });
+
+    // 5. Commit the batch write
+    await batch.commit();
+
+    // 6. Return the newly created shift object
+    return {
+        id: newShiftRef.id,
+        userId,
+        isOpen: true,
+        startTimestamp: Timestamp.now()
+    };
 };
 
 export const closeShift = async (shiftId: string): Promise<void> => {
@@ -145,3 +186,5 @@ export const deleteSale = async (shiftId: string, saleId: string) => {
   const saleRef = doc(db, 'shifts', shiftId, 'sales', saleId);
   await deleteDoc(saleRef);
 };
+
+    

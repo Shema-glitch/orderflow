@@ -39,7 +39,27 @@ export default function Home() {
   const [menu, setMenu] = useLocalStorage('menu', initialMenu);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [salesLoading, setSalesLoading] = useState(true);
+  const [isOnline, setIsOnline] = useState(true);
 
+
+  useEffect(() => {
+    // Handle online/offline status
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Set initial status
+    if (typeof window.navigator.onLine !== 'undefined') {
+        setIsOnline(window.navigator.onLine);
+    }
+
+    return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     // On mount, set theme from localStorage or system preference
@@ -302,6 +322,11 @@ export default function Home() {
         description: "The order has been removed from your list.",
       });
     } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Delete Failed",
+        description: "Could not delete the order. Please try again.",
+      });
       console.error("Error deleting order: ", error);
     }
   };
@@ -396,7 +421,15 @@ export default function Home() {
       <header className="w-full max-w-md mx-auto p-4 flex justify-between items-center bg-card shadow-sm z-50">
         <div>
           <h1 className="text-xl font-bold text-primary">OrderFlow Lite</h1>
-          {user && shift && <p className="text-xs text-muted-foreground">Current Shift</p>}
+          {user && shift && (
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-muted-foreground">Current Shift</p>
+                <div 
+                    className={`h-2.5 w-2.5 rounded-full transition-colors ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
+                    title={isOnline ? 'Online' : 'Offline'}
+                />
+              </div>
+          )}
         </div>
         <div className="flex items-center">
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
@@ -460,3 +493,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
+
+    
