@@ -18,7 +18,8 @@ import {
   limit,
   writeBatch,
   Timestamp,
-  enableIndexedDbPersistence
+  enableIndexedDbPersistence,
+  collectionGroup
 } from 'firebase/firestore';
 import type { Order, Sale, Shift } from './types';
 
@@ -65,11 +66,45 @@ export const getCurrentShift = async (userId: string): Promise<Shift | null> => 
 };
 
 export const createShift = async (userId: string): Promise<Shift> => {
+  // First, find all uncharged orders and sales from previous shifts for this user
+  const unchargedOrdersQuery = query(collectionGroup(db, 'orders'), where('userId', '==', userId), where('charged', '==', false));
+  const unchargedSalesQuery = query(collectionGroup(db, 'sales'), where('userId', '==', userId), where('charged', '==', false));
+
+  const [unchargedOrdersSnapshot, unchargedSalesSnapshot] = await Promise.all([
+    getDocs(unchargedOrdersQuery),
+    getDocs(unchargedSalesQuery)
+  ]);
+  
+  // Start a new shift
   const newShiftRef = await addDoc(shiftsCollection, {
     userId,
     isOpen: true,
     startTimestamp: serverTimestamp(),
   });
+  
+  // Now, batch move the uncharged items to the new shift
+  const batch = writeBatch(db);
+
+  unchargedOrdersSnapshot.forEach(doc => {
+    const orderData = doc.data() as Order;
+    // Copy to new shift's subcollection
+    const newOrderRef = collection(db, 'shifts', newShiftRef.id, 'orders');
+    batch.set(doc(newOrderRef), orderData);
+    // Delete from old location
+    batch.delete(doc.ref);
+  });
+
+  unchargedSalesSnapshot.forEach(doc => {
+    const saleData = doc.data() as Sale;
+    // Copy to new shift's subcollection
+    const newSaleRef = collection(db, 'shifts', newShiftRef.id, 'sales');
+    batch.set(doc(newSaleRef), saleData);
+    // Delete from old location
+    batch.delete(doc.ref);
+  });
+
+  await batch.commit();
+
   return {
       id: newShiftRef.id,
       userId,
@@ -143,3 +178,5 @@ export const deleteSale = async (shiftId: string, saleId: string) => {
   const saleRef = doc(db, 'shifts', shiftId, 'sales', saleId);
   await deleteDoc(saleRef);
 };
+
+    

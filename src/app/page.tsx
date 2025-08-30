@@ -119,6 +119,7 @@ export default function Home() {
   
   const handleOpenShift = async () => {
     if (user) {
+      setView('loading');
       const newShift = await createShift(user.uid);
       setShift(newShift);
       setView('orders_list');
@@ -127,6 +128,14 @@ export default function Home() {
 
   const handleCloseShift = async (force = false) => {
     if (shift) {
+      const unchargedOrdersCount = orders.filter(o => !o.charged).length;
+      const unchargedSalesCount = sales.filter(s => !s.charged).length;
+      
+      if (!force && (unchargedOrdersCount > 0 || unchargedSalesCount > 0)) {
+        // This will be handled by the warning dialog in ShiftSummaryScreen
+        // which now controls the flow.
+        return;
+      }
       await closeShift(shift.id);
       setShift(null);
       setOrders([]);
@@ -439,3 +448,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
