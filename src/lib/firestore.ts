@@ -30,12 +30,8 @@ try {
     enableIndexedDbPersistence(db)
       .catch((err) => {
         if (err.code == 'failed-precondition') {
-          // Multiple tabs open, persistence can only be enabled
-          // in one tab at a time.
           console.warn('Firestore persistence failed: multiple tabs open.');
         } else if (err.code == 'unimplemented') {
-          // The current browser does not support all of the
-          // features required to enable persistence
           console.warn('Firestore persistence not available in this browser.');
         }
       });
@@ -71,14 +67,12 @@ export const createShift = async (userId: string): Promise<Shift> => {
 
     const batch = writeBatch(db);
 
-    // 1. Find all uncharged orders from previous shifts for the user
     const unchargedOrdersQuery = query(
         collectionGroup(db, 'orders'), 
         where('userId', '==', userId), 
         where('charged', '==', false),
         orderBy('timestamp', 'desc')
     );
-    // 2. Find all uncharged sales from previous shifts for the user
     const unchargedSalesQuery = query(
         collectionGroup(db, 'sales'),
         where('userId', '==', userId),
@@ -91,7 +85,6 @@ export const createShift = async (userId: string): Promise<Shift> => {
         getDocs(unchargedSalesQuery)
     ]);
 
-    // 3. Create a new shift document
     const newShiftRef = doc(collection(shiftsCollection));
     batch.set(newShiftRef, {
         userId,
@@ -99,26 +92,22 @@ export const createShift = async (userId: string): Promise<Shift> => {
         startTimestamp: serverTimestamp(),
     });
 
-    // 4. Copy uncharged orders to the new shift and delete the old ones
     unchargedOrdersSnapshot.forEach(doc => {
         const orderData = doc.data() as Omit<Order, 'id'>;
         const newOrderRef = doc(db, 'shifts', newShiftRef.id, 'orders', doc.id);
         batch.set(newOrderRef, orderData);
-        batch.delete(doc.ref); // Delete the old order
+        batch.delete(doc.ref);
     });
 
-    // 5. Copy uncharged sales to the new shift and delete the old ones
     unchargedSalesSnapshot.forEach(doc => {
         const saleData = doc.data() as Omit<Sale, 'id'>;
         const newSaleRef = doc(db, 'shifts', newShiftRef.id, 'sales', doc.id);
         batch.set(newSaleRef, saleData);
-        batch.delete(doc.ref); // Delete the old sale
+        batch.delete(doc.ref);
     });
 
-    // 6. Commit the batch write
     await batch.commit();
 
-    // 7. Return the newly created shift object
     return {
         id: newShiftRef.id,
         userId,
@@ -139,7 +128,7 @@ export const closeShift = async (shiftId: string): Promise<void> => {
 
 // ORDER MANAGEMENT
 export const listenToOrders = (shiftId: string, callback: (orders: Order[]) => void) => {
-  if (!shiftId) return () => {}; // Return an empty unsubscribe function
+  if (!shiftId) return () => {};
   const ordersCollection = collection(db, 'shifts', shiftId, 'orders');
   const q = query(ordersCollection, orderBy('timestamp', 'desc'));
   
@@ -172,7 +161,7 @@ export const deleteOrder = async (shiftId: string, orderId: string) => {
 
 // SALE MANAGEMENT
 export const listenToSales = (shiftId: string, callback: (sales: Sale[]) => void) => {
-  if (!shiftId) return () => {}; // Return an empty unsubscribe function
+  if (!shiftId) return () => {};
   const salesCollection = collection(db, 'shifts', shiftId, 'sales');
   const q = query(salesCollection, orderBy('timestamp', 'desc'));
 

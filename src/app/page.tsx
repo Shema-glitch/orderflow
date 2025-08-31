@@ -43,7 +43,10 @@ export default function Home() {
   const [salesLoading, setSalesLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
   const [isOfflineDialogOpen, setIsOfflineDialogOpen] = useState(false);
-
+  
+  // These will hold the unsubscribe functions for Firestore listeners
+  let ordersUnsubscribe: (() => void) | null = null;
+  let salesUnsubscribe: (() => void) | null = null;
 
   useEffect(() => {
     // Handle online/offline status
@@ -60,10 +63,14 @@ export default function Home() {
     if (typeof window.navigator.onLine !== 'undefined') {
         setIsOnline(window.navigator.onLine);
     }
-
+    
+    // Cleanup function
     return () => {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
+        // Ensure listeners are cleaned up when the component unmounts
+        if (ordersUnsubscribe) ordersUnsubscribe();
+        if (salesUnsubscribe) salesUnsubscribe();
     };
   }, []);
 
@@ -87,19 +94,58 @@ export default function Home() {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Fetch current shift and listen for changes
+  // Fetch/Create shift and then listen for data
   useEffect(() => {
     if (authLoading) {
       setView('loading');
       return;
     }
+    
+    // Clean up previous listeners when user or auth state changes
+    if (ordersUnsubscribe) ordersUnsubscribe();
+    if (salesUnsubscribe) salesUnsubscribe();
+
     if (user) {
-        const fetchShift = async () => {
-            const activeShift = await createShift(user.uid);
-            setShift(activeShift);
-            setView('orders_list');
-        }
-        fetchShift();
+        const setupShiftAndListeners = async () => {
+            try {
+                setOrdersLoading(true);
+                setSalesLoading(true);
+                setView('loading');
+                
+                const newShift = await createShift(user.uid);
+                setShift(newShift);
+
+                // Now that we have a valid shift, start listening for data.
+                if (newShift) {
+                   ordersUnsubscribe = listenToOrders(newShift.id, (loadedOrders) => {
+                        setOrders(loadedOrders);
+                        setOrdersLoading(false);
+                    });
+                    
+                   salesUnsubscribe = listenToSales(newShift.id, (loadedSales) => {
+                        setSales(loadedSales);
+                        setSalesLoading(false);
+                    });
+                } else {
+                    setOrdersLoading(false);
+                    setSalesLoading(false);
+                }
+
+                setView('orders_list');
+
+            } catch (error) {
+                console.error("Error setting up shift:", error);
+                toast({
+                    variant: "destructive",
+                    title: "Could Not Start Shift",
+                    description: "There was a problem starting the session. Please check your connection and try again."
+                });
+                // Log out the user or handle the error appropriately
+                signOutUser();
+            }
+        };
+        setupShiftAndListeners();
+
     } else {
       // User is logged out
       setView('shift_closed');
@@ -107,35 +153,14 @@ export default function Home() {
       setOrders([]);
       setSales([]);
     }
+    
+    // Return a cleanup function for this effect
+    return () => {
+        if (ordersUnsubscribe) ordersUnsubscribe();
+        if (salesUnsubscribe) salesUnsubscribe();
+    }
   }, [user, authLoading]);
 
-
-  // Listen to orders and sales when a shift is active
-  useEffect(() => {
-    if (shift && user) {
-      setOrdersLoading(true);
-      setSalesLoading(true);
-
-      const unsubscribeOrders = listenToOrders(shift.id, (loadedOrders) => {
-        setOrders(loadedOrders);
-        setOrdersLoading(false);
-      });
-      
-      const unsubscribeSales = listenToSales(shift.id, (loadedSales) => {
-        setSales(loadedSales);
-        setSalesLoading(false);
-      });
-      
-      return () => {
-        unsubscribeOrders();
-        unsubscribeSales();
-      };
-    } else {
-      // If no shift, clear orders and sales
-      setOrders([]);
-      setSales([]);
-    }
-  }, [shift, user]);
 
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
@@ -148,6 +173,17 @@ export default function Home() {
         const newShift = await createShift(user.uid);
         setShift(newShift);
         setView('orders_list');
+        // Start listeners after manually opening a shift as well
+        if (newShift) {
+            ordersUnsubscribe = listenToOrders(newShift.id, (loadedOrders) => {
+                setOrders(loadedOrders);
+                setOrdersLoading(false);
+            });
+            salesUnsubscribe = listenToSales(newShift.id, (loadedSales) => {
+                setSales(loadedSales);
+                setSalesLoading(false);
+            });
+        }
       } catch (error) {
         console.error("Error opening shift:", error);
         toast({
@@ -155,7 +191,6 @@ export default function Home() {
           title: "Could Not Open Shift",
           description: "There was a problem opening a new shift. Please check your connection and try again."
         });
-        // If it fails, put them back to the closed shift screen
         setView('shift_closed');
       }
     }
@@ -167,11 +202,13 @@ export default function Home() {
       const unchargedSalesCount = sales.filter(s => !s.charged).length;
       
       if (!force && (unchargedOrdersCount > 0 || unchargedSalesCount > 0)) {
-        // This is handled by the warning dialog in ShiftSummaryScreen,
-        // which calls this function with force=true if the user proceeds.
-        // Returning here prevents closing and relies on the dialog to control the flow.
         return;
       }
+      
+      // Stop listening to data before closing the shift
+      if (ordersUnsubscribe) ordersUnsubscribe();
+      if (salesUnsubscribe) salesUnsubscribe();
+
       await closeShift(shift.id);
       setShift(null);
       setOrders([]);
@@ -244,10 +281,9 @@ export default function Home() {
           description: `Don't forget to mark it as 'Charged' once payment is received.`,
         });
       }
-      // Optimistic UI update: Close the form immediately
       setShowNewEntry(false);
       setEditingOrder(null);
-      return true; // Indicate success
+      return true; 
     } catch (error) {
        toast({
         variant: "destructive",
@@ -278,7 +314,6 @@ export default function Home() {
   };
   
   const handleEditSale = (sale: Sale) => {
-    // TODO: Implement the UI for editing a sale
     console.log('Editing sale:', sale);
     toast({
       title: "Edit Sale (Not Implemented)",
@@ -528,5 +563,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
