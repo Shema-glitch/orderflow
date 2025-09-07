@@ -63,7 +63,9 @@ export const getCurrentShift = async (userId: string): Promise<Shift | null> => 
 };
 
 export const createShift = async (userId: string): Promise<Shift> => {
-    if (!userId) throw new Error("User ID is required to create a shift.");
+    if (!userId) {
+        throw new Error("User ID is required to create a shift.");
+    }
 
     const batch = writeBatch(db);
 

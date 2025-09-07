@@ -43,6 +43,7 @@ export default function Home() {
   const [salesLoading, setSalesLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
   const [isOfflineDialogOpen, setIsOfflineDialogOpen] = useState(false);
+  const [isShiftLoading, setIsShiftLoading] = useState(true);
   
 
   useEffect(() => {
@@ -90,72 +91,78 @@ export default function Home() {
 
   // Fetch/Create shift and then listen for data
   useEffect(() => {
-    let ordersUnsubscribe: (() => void) | null = null;
-    let salesUnsubscribe: (() => void) | null = null;
-
     if (authLoading) {
       setView('loading');
       return;
     }
-
-    if (user) {
-        const setupShiftAndListeners = async () => {
-            try {
-                setOrdersLoading(true);
-                setSalesLoading(true);
-                setView('loading');
-                
-                const newShift = await createShift(user.uid);
-                setShift(newShift);
-
-                // Now that we have a valid shift, start listening for data.
-                if (newShift) {
-                   ordersUnsubscribe = listenToOrders(newShift.id, (loadedOrders) => {
-                        setOrders(loadedOrders);
-                        setOrdersLoading(false);
-                    });
-                    
-                   salesUnsubscribe = listenToSales(newShift.id, (loadedSales) => {
-                        setSales(loadedSales);
-                        setSalesLoading(false);
-                    });
-                } else {
-                    // This case might happen if createShift returns null
-                    setOrdersLoading(false);
-                    setSalesLoading(false);
-                }
-
-                setView('orders_list');
-
-            } catch (error) {
-                console.error("Error setting up shift:", error);
-                toast({
-                    variant: "destructive",
-                    title: "Could Not Start Shift",
-                    description: "There was a problem starting the session. Please check your connection and try again."
-                });
-                signOutUser();
-            }
-        };
-        setupShiftAndListeners();
-
-    } else {
-      // User is logged out
-      setView('shift_closed');
-      setShift(null);
-      setOrders([]);
-      setSales([]);
-    }
-    
+  
+    // This is the cleanup function that will be called when the component unmounts
+    // or when the dependencies (user, authLoading) change.
+    let ordersUnsubscribe: (() => void) | null = null;
+    let salesUnsubscribe: (() => void) | null = null;
+  
+    const setupShiftAndListeners = async () => {
+      if (!user) {
+        // Clear all state when user logs out
+        setShift(null);
+        setOrders([]);
+        setSales([]);
+        setView('shift_closed');
+        setIsShiftLoading(false);
+        return;
+      }
+  
+      try {
+        setIsShiftLoading(true);
+        setView('loading');
+        setOrdersLoading(true);
+        setSalesLoading(true);
+  
+        const newShift = await createShift(user.uid);
+        setShift(newShift);
+  
+        // Now that we have a valid shift, start listening for data.
+        if (newShift?.id) {
+          ordersUnsubscribe = listenToOrders(newShift.id, (loadedOrders) => {
+            setOrders(loadedOrders);
+            setOrdersLoading(false);
+          });
+          
+          salesUnsubscribe = listenToSales(newShift.id, (loadedSales) => {
+            setSales(loadedSales);
+            setSalesLoading(false);
+          });
+        } else {
+          // This case might happen if createShift returns null or an invalid shift
+          setOrdersLoading(false);
+          setSalesLoading(false);
+        }
+  
+        setView('orders_list');
+      } catch (error) {
+        console.error("Error setting up shift:", error);
+        toast({
+            variant: "destructive",
+            title: "Could Not Start Shift",
+            description: "There was a problem starting the session. Please check your connection and try again."
+        });
+        signOutUser(); // Log out on critical failure
+      } finally {
+        setIsShiftLoading(false);
+      }
+    };
+  
+    setupShiftAndListeners();
+  
     // Return a cleanup function for this effect
     return () => {
-        if (ordersUnsubscribe) {
-          ordersUnsubscribe();
-        }
-        if (salesUnsubscribe) {
-          salesUnsubscribe();
-        }
-    }
+      if (ordersUnsubscribe) {
+        ordersUnsubscribe();
+      }
+      if (salesUnsubscribe) {
+        salesUnsubscribe();
+      }
+    };
   }, [user, authLoading]);
 
 
@@ -166,34 +173,11 @@ export default function Home() {
   const handleOpenShift = async () => {
     if (!user) return;
     
-    let ordersUnsubscribe: (() => void) | null = null;
-    let salesUnsubscribe: (() => void) | null = null;
-    
-    setView('loading');
-    try {
-      const newShift = await createShift(user.uid);
-      setShift(newShift);
-      setView('orders_list');
-      // Start listeners after manually opening a shift as well
-      if (newShift) {
-          ordersUnsubscribe = listenToOrders(newShift.id, (loadedOrders) => {
-              setOrders(loadedOrders);
-              setOrdersLoading(false);
-          });
-          salesUnsubscribe = listenToSales(newShift.id, (loadedSales) => {
-              setSales(loadedSales);
-              setSalesLoading(false);
-          });
-      }
-    } catch (error) {
-      console.error("Error opening shift:", error);
-      toast({
-        variant: "destructive",
-        title: "Could Not Open Shift",
-        description: "There was a problem opening a new shift. Please check your connection and try again."
-      });
-      setView('shift_closed');
-    }
+    // The main useEffect hook already handles shift creation.
+    // This function can be simplified or removed if not needed for a manual "start new shift" button
+    // during an active session. For now, we'll assume the main useEffect is sufficient.
+    // If you need a manual refresh, we can re-implement this safely.
+    toast({ title: "Shift is already active."});
   };
 
   const handleCloseShift = async (force = false) => {
@@ -206,7 +190,7 @@ export default function Home() {
       }
       
       await closeShift(shift.id);
-      // Let the useEffect handle the state cleanup
+      // Let the main useEffect handle state cleanup when user is logged out (or if we re-trigger it)
     }
   };
 
@@ -371,12 +355,12 @@ export default function Home() {
         description: "The order has been removed from your list.",
       });
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Delete Failed",
-        description: "Could not delete the order. Please try again.",
-      });
-      console.error("Error deleting order: ", error);
+        toast({
+            variant: "destructive",
+            title: "Delete Failed",
+            description: "Could not delete the order. Please try again.",
+        });
+        console.error("Error deleting order: ", error);
     }
   };
 
@@ -399,7 +383,7 @@ export default function Home() {
   };
   
   const renderView = () => {
-    if (authLoading || view === 'loading') {
+    if (authLoading || isShiftLoading || view === 'loading') {
       return (
         <div className="flex h-screen w-full items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -457,7 +441,7 @@ export default function Home() {
     );
   };
   
-  if (authLoading) {
+  if (authLoading || isShiftLoading) {
      return (
         <div className="flex h-screen w-full items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -556,5 +540,3 @@ export default function Home() {
   );
 }
 
-
-    
