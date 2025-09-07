@@ -44,9 +44,6 @@ export default function Home() {
   const [isOnline, setIsOnline] = useState(true);
   const [isOfflineDialogOpen, setIsOfflineDialogOpen] = useState(false);
   
-  // These will hold the unsubscribe functions for Firestore listeners
-  let ordersUnsubscribe: (() => void) | null = null;
-  let salesUnsubscribe: (() => void) | null = null;
 
   useEffect(() => {
     // Handle online/offline status
@@ -68,9 +65,6 @@ export default function Home() {
     return () => {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
-        // Ensure listeners are cleaned up when the component unmounts
-        if (ordersUnsubscribe) ordersUnsubscribe();
-        if (salesUnsubscribe) salesUnsubscribe();
     };
   }, []);
 
@@ -96,14 +90,13 @@ export default function Home() {
 
   // Fetch/Create shift and then listen for data
   useEffect(() => {
+    let ordersUnsubscribe: (() => void) | null = null;
+    let salesUnsubscribe: (() => void) | null = null;
+
     if (authLoading) {
       setView('loading');
       return;
     }
-    
-    // Clean up previous listeners when user or auth state changes
-    if (ordersUnsubscribe) ordersUnsubscribe();
-    if (salesUnsubscribe) salesUnsubscribe();
 
     if (user) {
         const setupShiftAndListeners = async () => {
@@ -127,6 +120,7 @@ export default function Home() {
                         setSalesLoading(false);
                     });
                 } else {
+                    // This case might happen if createShift returns null
                     setOrdersLoading(false);
                     setSalesLoading(false);
                 }
@@ -140,7 +134,6 @@ export default function Home() {
                     title: "Could Not Start Shift",
                     description: "There was a problem starting the session. Please check your connection and try again."
                 });
-                // Log out the user or handle the error appropriately
                 signOutUser();
             }
         };
@@ -156,8 +149,12 @@ export default function Home() {
     
     // Return a cleanup function for this effect
     return () => {
-        if (ordersUnsubscribe) ordersUnsubscribe();
-        if (salesUnsubscribe) salesUnsubscribe();
+        if (ordersUnsubscribe) {
+          ordersUnsubscribe();
+        }
+        if (salesUnsubscribe) {
+          salesUnsubscribe();
+        }
     }
   }, [user, authLoading]);
 
@@ -167,32 +164,35 @@ export default function Home() {
   };
   
   const handleOpenShift = async () => {
-    if (user) {
-      setView('loading');
-      try {
-        const newShift = await createShift(user.uid);
-        setShift(newShift);
-        setView('orders_list');
-        // Start listeners after manually opening a shift as well
-        if (newShift) {
-            ordersUnsubscribe = listenToOrders(newShift.id, (loadedOrders) => {
-                setOrders(loadedOrders);
-                setOrdersLoading(false);
-            });
-            salesUnsubscribe = listenToSales(newShift.id, (loadedSales) => {
-                setSales(loadedSales);
-                setSalesLoading(false);
-            });
-        }
-      } catch (error) {
-        console.error("Error opening shift:", error);
-        toast({
-          variant: "destructive",
-          title: "Could Not Open Shift",
-          description: "There was a problem opening a new shift. Please check your connection and try again."
-        });
-        setView('shift_closed');
+    if (!user) return;
+    
+    let ordersUnsubscribe: (() => void) | null = null;
+    let salesUnsubscribe: (() => void) | null = null;
+    
+    setView('loading');
+    try {
+      const newShift = await createShift(user.uid);
+      setShift(newShift);
+      setView('orders_list');
+      // Start listeners after manually opening a shift as well
+      if (newShift) {
+          ordersUnsubscribe = listenToOrders(newShift.id, (loadedOrders) => {
+              setOrders(loadedOrders);
+              setOrdersLoading(false);
+          });
+          salesUnsubscribe = listenToSales(newShift.id, (loadedSales) => {
+              setSales(loadedSales);
+              setSalesLoading(false);
+          });
       }
+    } catch (error) {
+      console.error("Error opening shift:", error);
+      toast({
+        variant: "destructive",
+        title: "Could Not Open Shift",
+        description: "There was a problem opening a new shift. Please check your connection and try again."
+      });
+      setView('shift_closed');
     }
   };
 
@@ -205,16 +205,8 @@ export default function Home() {
         return;
       }
       
-      // Stop listening to data before closing the shift
-      if (ordersUnsubscribe) ordersUnsubscribe();
-      if (salesUnsubscribe) salesUnsubscribe();
-
       await closeShift(shift.id);
-      setShift(null);
-      setOrders([]);
-      setSales([]);
-      setEditingOrder(null);
-      setView('shift_closed');
+      // Let the useEffect handle the state cleanup
     }
   };
 
@@ -563,3 +555,6 @@ export default function Home() {
     </div>
   );
 }
+
+
+    
