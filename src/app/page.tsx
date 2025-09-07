@@ -20,8 +20,7 @@ import { useAuth, signInWithGoogle, signOutUser } from '@/lib/auth';
 import type { User } from 'firebase/auth';
 import LoginScreen from '@/components/screens/login-screen';
 import OrderDetailScreen from '@/components/screens/order-detail-screen';
-import { ToastAction } from "@/components/ui/toast"
-import { createShift, closeShift, listenToOrders, addOrder, updateOrder, deleteOrder, listenToSales, addSale, deleteSale, updateSale } from '@/lib/firestore';
+import { createShift, closeShift, listenToOrders, addOrder, updateOrder, deleteOrder, listenToSales, addSale, deleteSale, updateSale, getCurrentShift } from '@/lib/firestore';
 import { Badge } from '@/components/ui/badge';
 import isEqual from 'lodash.isequal';
 
@@ -89,7 +88,7 @@ export default function Home() {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Fetch/Create shift and then listen for data
+  // Main effect for handling user auth state and setting up the shift
   useEffect(() => {
     if (authLoading) {
       setView('loading');
@@ -97,62 +96,60 @@ export default function Home() {
     }
   
     // This is the cleanup function that will be called when the component unmounts
-    // or when the dependencies (user, authLoading) change.
+    // or when the dependencies change.
     let ordersUnsubscribe: (() => void) | null = null;
     let salesUnsubscribe: (() => void) | null = null;
   
-    const setupShiftAndListeners = async () => {
-      if (!user) {
-        // Clear all state when user logs out
-        setShift(null);
-        setOrders([]);
-        setSales([]);
-        setView('shift_closed');
-        setIsShiftLoading(false);
-        return;
-      }
-  
+    const setupApplication = async (currentUser: User) => {
+      setIsShiftLoading(true);
+      setView('loading');
+      
       try {
-        setIsShiftLoading(true);
-        setView('loading');
-        setOrdersLoading(true);
-        setSalesLoading(true);
-  
-        const newShift = await createShift(user.uid);
-        setShift(newShift);
-  
-        // Now that we have a valid shift, start listening for data.
-        if (newShift?.id) {
-          ordersUnsubscribe = listenToOrders(newShift.id, (loadedOrders) => {
+        const currentShift = await getCurrentShift(currentUser.uid);
+        setShift(currentShift);
+
+        if (currentShift?.id) {
+          setOrdersLoading(true);
+          setSalesLoading(true);
+
+          ordersUnsubscribe = listenToOrders(currentShift.id, (loadedOrders) => {
             setOrders(loadedOrders);
             setOrdersLoading(false);
           });
           
-          salesUnsubscribe = listenToSales(newShift.id, (loadedSales) => {
+          salesUnsubscribe = listenToSales(currentShift.id, (loadedSales) => {
             setSales(loadedSales);
             setSalesLoading(false);
           });
+          setView('orders_list');
         } else {
-          // This case might happen if createShift returns null or an invalid shift
-          setOrdersLoading(false);
-          setSalesLoading(false);
+           setView('shift_closed');
+           setOrdersLoading(false);
+           setSalesLoading(false);
         }
-  
-        setView('orders_list');
       } catch (error) {
-        console.error("Error setting up shift:", error);
+        console.error("Error setting up application:", error);
         toast({
             variant: "destructive",
-            title: "Could Not Start Shift",
-            description: "There was a problem starting the session. Please check your connection and try again."
+            title: "Application Error",
+            description: "Could not initialize your session. Please try again."
         });
-        signOutUser(); // Log out on critical failure
+        signOutUser();
       } finally {
         setIsShiftLoading(false);
       }
     };
   
-    setupShiftAndListeners();
+    if (user) {
+      setupApplication(user);
+    } else {
+      // No user is logged in
+      setShift(null);
+      setOrders([]);
+      setSales([]);
+      setView('shift_closed');
+      setIsShiftLoading(false);
+    }
   
     // Return a cleanup function for this effect
     return () => {
@@ -173,11 +170,20 @@ export default function Home() {
   const handleOpenShift = async () => {
     if (!user) return;
     
-    // The main useEffect hook already handles shift creation.
-    // This function can be simplified or removed if not needed for a manual "start new shift" button
-    // during an active session. For now, we'll assume the main useEffect is sufficient.
-    // If you need a manual refresh, we can re-implement this safely.
-    toast({ title: "Shift is already active."});
+    setIsShiftLoading(true);
+    try {
+        const newShift = await createShift(user.uid);
+        setShift(newShift); // This will trigger the useEffect to fetch data
+    } catch(error) {
+        console.error("Error opening shift:", error);
+        toast({
+            variant: "destructive",
+            title: "Could Not Start Shift",
+            description: "There was a problem starting the session. Please check your connection and try again."
+        });
+    } finally {
+       // isShiftLoading will be set to false by the main data-fetching useEffect
+    }
   };
 
   const handleCloseShift = async (force = false) => {
@@ -186,11 +192,16 @@ export default function Home() {
       const unchargedSalesCount = sales.filter(s => !s.charged).length;
       
       if (!force && (unchargedOrdersCount > 0 || unchargedSalesCount > 0)) {
+        // This case is handled by the dialog in ShiftSummaryScreen
+        // The dialog will call this function again with force=true if needed
         return;
       }
       
       await closeShift(shift.id);
-      // Let the main useEffect handle state cleanup when user is logged out (or if we re-trigger it)
+      setShift(null); // Set shift to null, which will trigger UI update to 'shift_closed' view.
+      setOrders([]);
+      setSales([]);
+      setView('shift_closed');
     }
   };
 
@@ -241,10 +252,8 @@ export default function Home() {
       }
     }
 
-
     try {
       if (editingOrder) {
-        // Update existing order
         await updateOrder(shift.id, editingOrder.id, orderData);
         toast({
           title: "Order Updated!",
@@ -257,6 +266,7 @@ export default function Home() {
           description: `Don't forget to mark it as 'Charged' once payment is received.`,
         });
       }
+      // This part handles the optimistic UI update for offline mode
       setShowNewEntry(false);
       setEditingOrder(null);
       return true; 
@@ -355,12 +365,12 @@ export default function Home() {
         description: "The order has been removed from your list.",
       });
     } catch (error) {
-        toast({
-            variant: "destructive",
-            title: "Delete Failed",
-            description: "Could not delete the order. Please try again.",
-        });
-        console.error("Error deleting order: ", error);
+      toast({
+        variant: "destructive",
+        title: "Delete Failed",
+        description: "Could not delete the order. Please try again.",
+      });
+      console.error("Error deleting order: ", error);
     }
   };
 
@@ -383,7 +393,7 @@ export default function Home() {
   };
   
   const renderView = () => {
-    if (authLoading || isShiftLoading || view === 'loading') {
+    if (authLoading || view === 'loading' || isShiftLoading) {
       return (
         <div className="flex h-screen w-full items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -441,7 +451,7 @@ export default function Home() {
     );
   };
   
-  if (authLoading || isShiftLoading) {
+  if (authLoading) {
      return (
         <div className="flex h-screen w-full items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -457,7 +467,7 @@ export default function Home() {
           {user && shift && (
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-xs text-muted-foreground">Current Shift</p>
-                <Badge variant={isOnline ? "success" : "destructive"} className={`transition-colors ${isOnline ? 'animate-ring' : ''}`}>
+                <Badge variant={isOnline ? "success" : "destructive"} className={`transition-colors`}>
                     {isOnline ? 'Online' : 'Offline'}
                 </Badge>
               </div>
@@ -496,7 +506,7 @@ export default function Home() {
           <BottomNav activeView={view as AppView} setView={setView} />
           <Button
             size="lg"
-            className="fixed bottom-24 right-6 h-16 w-16 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground z-50 ring-4 ring-primary/30 hover:ring-primary/40 dark:ring-offset-background"
+            className="fixed bottom-24 right-6 h-16 w-16 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground z-50"
             onClick={() => setShowNewEntry(true)}
             aria-label="Create New Order"
           >
@@ -539,6 +549,3 @@ export default function Home() {
     </div>
   );
 }
-
-
-    
