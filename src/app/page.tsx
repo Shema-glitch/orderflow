@@ -46,7 +46,6 @@ export default function Home() {
   
 
   useEffect(() => {
-    // Handle online/offline status
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => {
         setIsOnline(false);
@@ -56,12 +55,10 @@ export default function Home() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Set initial status
     if (typeof window.navigator.onLine !== 'undefined') {
         setIsOnline(window.navigator.onLine);
     }
     
-    // Cleanup function
     return () => {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
@@ -69,7 +66,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // On mount, set theme from localStorage or system preference
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (savedTheme) {
@@ -95,8 +91,6 @@ export default function Home() {
       return;
     }
   
-    // This is the cleanup function that will be called when the component unmounts
-    // or when the dependencies change.
     let ordersUnsubscribe: (() => void) | null = null;
     let salesUnsubscribe: (() => void) | null = null;
   
@@ -134,7 +128,8 @@ export default function Home() {
             title: "Application Error",
             description: "Could not initialize your session. Please try again."
         });
-        signOutUser();
+        // Consider signing out the user if setup fails catastrophically
+        // signOutUser();
       } finally {
         setIsShiftLoading(false);
       }
@@ -143,15 +138,14 @@ export default function Home() {
     if (user) {
       setupApplication(user);
     } else {
-      // No user is logged in
+      // No user is logged in, reset all state
       setShift(null);
       setOrders([]);
       setSales([]);
-      setView('shift_closed');
+      setView('shift_closed'); // Or a dedicated login view
       setIsShiftLoading(false);
     }
   
-    // Return a cleanup function for this effect
     return () => {
       if (ordersUnsubscribe) {
         ordersUnsubscribe();
@@ -160,7 +154,7 @@ export default function Home() {
         salesUnsubscribe();
       }
     };
-  }, [user, authLoading]);
+  }, [user, authLoading, toast]);
 
 
   const toggleTheme = () => {
@@ -173,36 +167,34 @@ export default function Home() {
     setIsShiftLoading(true);
     try {
         const newShift = await createShift(user.uid);
-        setShift(newShift); // This will trigger the useEffect to fetch data
+        setShift(newShift); // This state update will be picked up by the main useEffect
     } catch(error) {
         console.error("Error opening shift:", error);
         toast({
             variant: "destructive",
             title: "Could Not Start Shift",
-            description: "There was a problem starting the session. Please check your connection and try again."
+            description: "There was a problem starting your session. Please try again."
         });
-    } finally {
-       // isShiftLoading will be set to false by the main data-fetching useEffect
+        setIsShiftLoading(false);
     }
   };
 
   const handleCloseShift = async (force = false) => {
-    if (shift) {
-      const unchargedOrdersCount = orders.filter(o => !o.charged).length;
-      const unchargedSalesCount = sales.filter(s => !s.charged).length;
-      
-      if (!force && (unchargedOrdersCount > 0 || unchargedSalesCount > 0)) {
-        // This case is handled by the dialog in ShiftSummaryScreen
-        // The dialog will call this function again with force=true if needed
-        return;
-      }
-      
-      await closeShift(shift.id);
-      setShift(null); // Set shift to null, which will trigger UI update to 'shift_closed' view.
-      setOrders([]);
-      setSales([]);
-      setView('shift_closed');
+    if (!shift) return;
+
+    const unchargedOrdersCount = orders.filter(o => !o.charged).length;
+    const unchargedSalesCount = sales.filter(s => !s.charged).length;
+    
+    if (!force && (unchargedOrdersCount > 0 || unchargedSalesCount > 0)) {
+      // This case is handled by the dialog in ShiftSummaryScreen
+      return;
     }
+    
+    await closeShift(shift.id);
+    setShift(null); 
+    setOrders([]);
+    setSales([]);
+    setView('shift_closed');
   };
 
   const handleSaveOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'charged' | 'shiftId' | 'userId'>): Promise<boolean> => {
@@ -221,7 +213,7 @@ export default function Home() {
         title: "Customer Name Required",
         description: "Please enter a name for the order.",
       });
-      return false; // Indicate failure
+      return false;
     }
     const hasSelections = Object.values(orderData.items.selections).some(
       (selection) => Array.isArray(selection) && selection.length > 0
@@ -233,10 +225,9 @@ export default function Home() {
         title: "Cannot Save Empty Order",
         description: "Please make selections before saving.",
       });
-      return false; // Indicate failure
+      return false;
     }
 
-    // Check for duplicates
     if (!editingOrder) {
       const isDuplicate = orders.some(order => 
         order.customerName.trim().toLowerCase() === orderData.customerName.trim().toLowerCase() &&
@@ -266,7 +257,6 @@ export default function Home() {
           description: `Don't forget to mark it as 'Charged' once payment is received.`,
         });
       }
-      // This part handles the optimistic UI update for offline mode
       setShowNewEntry(false);
       setEditingOrder(null);
       return true; 
@@ -331,7 +321,7 @@ export default function Home() {
 
   const handleEditOrder = (order: Order) => {
     setEditingOrder(order);
-    setViewingOrder(null); // Close detail view if open
+    setViewingOrder(null);
     setShowNewEntry(true);
   };
 
@@ -549,3 +539,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
