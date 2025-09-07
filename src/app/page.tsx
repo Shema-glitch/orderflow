@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import type { AppView, Order, Shift, Sale } from '@/lib/types';
 import { menu as initialMenu } from '@/lib/menu-data';
@@ -52,10 +52,9 @@ export default function Home() {
         setIsOfflineDialogOpen(true);
     }
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    if (typeof window.navigator.onLine !== 'undefined') {
+    if (typeof window !== 'undefined') {
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
         setIsOnline(window.navigator.onLine);
     }
     
@@ -66,13 +65,8 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    } else {
-      setTheme(prefersDark ? 'dark' : 'light');
-    }
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
   }, []);
 
   useEffect(() => {
@@ -84,20 +78,13 @@ export default function Home() {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Main effect for handling user auth state and setting up the shift
+  // This is the main setup effect. It runs when auth state is confirmed.
   useEffect(() => {
-    if (authLoading) {
-      setView('loading');
-      return;
-    }
-  
     let ordersUnsubscribe: (() => void) | null = null;
     let salesUnsubscribe: (() => void) | null = null;
-  
+
     const setupApplication = async (currentUser: User) => {
       setIsShiftLoading(true);
-      setView('loading');
-      
       try {
         const currentShift = await getCurrentShift(currentUser.uid);
         setShift(currentShift);
@@ -105,7 +92,7 @@ export default function Home() {
         if (currentShift?.id) {
           setOrdersLoading(true);
           setSalesLoading(true);
-
+          
           ordersUnsubscribe = listenToOrders(currentShift.id, (loadedOrders) => {
             setOrders(loadedOrders);
             setOrdersLoading(false);
@@ -128,31 +115,29 @@ export default function Home() {
             title: "Application Error",
             description: "Could not initialize your session. Please try again."
         });
-        // Consider signing out the user if setup fails catastrophically
-        // signOutUser();
       } finally {
         setIsShiftLoading(false);
       }
     };
   
-    if (user) {
-      setupApplication(user);
-    } else {
-      // No user is logged in, reset all state
-      setShift(null);
-      setOrders([]);
-      setSales([]);
-      setView('shift_closed'); // Or a dedicated login view
-      setIsShiftLoading(false);
+    if (!authLoading) {
+      if (user) {
+        setupApplication(user);
+      } else {
+        // No user is logged in, reset all state
+        setShift(null);
+        setOrders([]);
+        setSales([]);
+        setView('shift_closed');
+        setIsShiftLoading(false);
+        setOrdersLoading(false);
+        setSalesLoading(false);
+      }
     }
   
     return () => {
-      if (ordersUnsubscribe) {
-        ordersUnsubscribe();
-      }
-      if (salesUnsubscribe) {
-        salesUnsubscribe();
-      }
+      ordersUnsubscribe?.();
+      salesUnsubscribe?.();
     };
   }, [user, authLoading, toast]);
 
@@ -168,6 +153,7 @@ export default function Home() {
     try {
         const newShift = await createShift(user.uid);
         setShift(newShift); // This state update will be picked up by the main useEffect
+        setView('orders_list');
     } catch(error) {
         console.error("Error opening shift:", error);
         toast({
@@ -175,12 +161,13 @@ export default function Home() {
             title: "Could Not Start Shift",
             description: "There was a problem starting your session. Please try again."
         });
+    } finally {
         setIsShiftLoading(false);
     }
   };
 
   const handleCloseShift = async (force = false) => {
-    if (!shift) return;
+    if (!shift || !shift.id) return;
 
     const unchargedOrdersCount = orders.filter(o => !o.charged).length;
     const unchargedSalesCount = sales.filter(s => !s.charged).length;
@@ -198,7 +185,7 @@ export default function Home() {
   };
 
   const handleSaveOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'charged' | 'shiftId' | 'userId'>): Promise<boolean> => {
-     if (!shift || !user) {
+     if (!shift || !user || !shift.id) {
         toast({
             variant: "destructive",
             title: "No Active Shift",
@@ -272,7 +259,7 @@ export default function Home() {
   };
   
   const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp' | 'shiftId' | 'charged' | 'userId'>) => {
-    if (!shift || !user) return;
+    if (!shift || !user || !shift.id) return;
     try {
         await addSale(shift.id, user.uid, sale);
         toast({
@@ -298,7 +285,7 @@ export default function Home() {
   };
 
   const handleDeleteSale = async (saleId: string) => {
-    if (!shift) return;
+    if (!shift || !shift.id) return;
     const saleToDelete = sales.find(s => s.id === saleId);
     if (!saleToDelete) return;
 
@@ -326,7 +313,7 @@ export default function Home() {
   };
 
   const handleMarkOrderAsCharged = async (orderId: string) => {
-    if (!shift) return;
+    if (!shift || !shift.id) return;
     try {
       await updateOrder(shift.id, orderId, { charged: true });
       setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: true } : prev);
@@ -336,7 +323,7 @@ export default function Home() {
   };
   
   const handleUnchargeOrder = async (orderId: string) => {
-    if (!shift) return;
+    if (!shift || !shift.id) return;
     try {
       await updateOrder(shift.id, orderId, { charged: false });
       setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: false } : prev);
@@ -346,7 +333,7 @@ export default function Home() {
   };
 
   const handleDeleteOrder = async (orderId: string) => {
-    if (!shift) return;
+    if (!shift || !shift.id) return;
     try {
       await deleteOrder(shift.id, orderId);
       setViewingOrder(null);
@@ -365,7 +352,7 @@ export default function Home() {
   };
 
   const handleMarkSaleAsCharged = async (saleId: string) => {
-    if (!shift) return;
+    if (!shift || !shift.id) return;
     try {
         await updateSale(shift.id, saleId, { charged: true });
     } catch (error) {
@@ -383,7 +370,7 @@ export default function Home() {
   };
   
   const renderView = () => {
-    if (authLoading || view === 'loading' || isShiftLoading) {
+    if (authLoading || isShiftLoading) {
       return (
         <div className="flex h-screen w-full items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />

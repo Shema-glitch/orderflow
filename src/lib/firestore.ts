@@ -63,26 +63,24 @@ export const createShift = async (userId: string): Promise<Shift> => {
         throw new Error("User ID is required to create a shift.");
     }
 
-    // First check if an open shift already exists
     const existingShift = await getCurrentShift(userId);
     if (existingShift) {
         return existingShift;
     }
 
-    // If no open shift, create a new one
-    const newShiftRef = doc(collection(shiftsCollection));
     const newShiftData = {
         userId,
         isOpen: true,
         startTimestamp: serverTimestamp(),
         endTimestamp: null,
     };
-    await addDoc(shiftsCollection, newShiftData);
+    
+    const newShiftRef = await addDoc(shiftsCollection, newShiftData);
 
     return {
         id: newShiftRef.id,
         ...newShiftData,
-        startTimestamp: Timestamp.now() // Return a client-side timestamp for immediate use
+        startTimestamp: Timestamp.now() 
     } as Shift;
 };
 
@@ -162,3 +160,5 @@ export const deleteSale = async (shiftId: string, saleId: string) => {
   const saleRef = doc(db, 'shifts', shiftId, 'sales', saleId);
   await deleteDoc(saleRef);
 };
+
+    
