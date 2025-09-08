@@ -53,6 +53,29 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUncharging, setIsUncharging] = useState(false);
 
+  const getOrderDetail = () => {
+    const { category, selections } = order.items;
+    let detail = category;
+
+    if (category === 'Coffee' || category === 'Tea') {
+      const type = selections['Type']?.[0];
+      if (type) detail = `${category} - ${type}`;
+    } else if (category === 'Protein Shake') {
+      const flavor = selections['Flavour']?.[0];
+      if (flavor) detail = `${category} - ${flavor}`;
+    } else if (category === 'Build Your Own Sandwich') {
+        const protein = selections['Protein']?.[0];
+        if (protein) detail = `${category} - ${protein}`;
+    } else {
+        const type = selections['Type']?.[0];
+        if (type) detail = `${category} - ${type}`;
+    }
+    
+    return detail;
+  };
+  
+  const orderDetail = getOrderDetail();
+
   return (
     <Card 
         className="w-full shadow-md transition-all duration-300 hover:shadow-lg dark:shadow-none dark:hover:bg-white/5"
@@ -62,6 +85,9 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
         <div className="flex items-start justify-between space-x-4">
           <div className="flex items-center space-x-4 flex-1">
             <Avatar className="h-12 w-12 text-lg">
+               {order.quantity > 1 && (
+                  <Badge variant="default" className="absolute -top-1 -right-2 z-10 rounded-full h-6 w-6 flex items-center justify-center text-sm">{order.quantity}</Badge>
+              )}
               <AvatarFallback className="bg-primary/10 text-primary font-bold">{initials}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
@@ -70,7 +96,7 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
                   <h3 className="font-bold text-lg text-foreground">
                     {order.customerName}
                   </h3>
-                  <p className="text-sm text-muted-foreground -mt-1">{order.items.category}</p>
+                  <p className="text-sm text-muted-foreground -mt-1">{orderDetail}</p>
                 </div>
                  <div className="text-right pl-2">
                     <p className="text-xs text-muted-foreground font-mono">

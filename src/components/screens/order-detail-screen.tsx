@@ -38,6 +38,29 @@ export default function OrderDetailScreen({ order, onClose, onMarkAsCharged, onU
     order.items.category === 'Protein Shake' && 
     order.items.selections['Toppings'] && 
     order.items.selections['Toppings'].length > 2;
+  
+  const getOrderDetail = () => {
+    const { category, selections } = order.items;
+    let detail = category;
+
+    if (category === 'Coffee' || category === 'Tea') {
+      const type = selections['Type']?.[0];
+      if (type) detail = `${category} - ${type}`;
+    } else if (category === 'Protein Shake') {
+      const flavor = selections['Flavour']?.[0];
+      if (flavor) detail = `${category} - ${flavor}`;
+    } else if (category === 'Build Your Own Sandwich') {
+        const protein = selections['Protein']?.[0];
+        if (protein) detail = `${category} - ${protein}`;
+    } else {
+        const type = selections['Type']?.[0];
+        if (type) detail = `${category} - ${type}`;
+    }
+    
+    return detail;
+  };
+
+  const orderTitle = `${order.quantity > 1 ? `${order.quantity}x ` : ''}${order.customerName}`;
 
   return (
     <div className="fixed inset-0 bg-background z-[100] p-4 flex flex-col">
@@ -50,8 +73,8 @@ export default function OrderDetailScreen({ order, onClose, onMarkAsCharged, onU
       <ScrollArea className="flex-1">
         <Card>
           <CardHeader>
-            <CardTitle>{order.customerName}</CardTitle>
-            <CardDescription>{order.items.category}</CardDescription>
+            <CardTitle>{orderTitle}</CardTitle>
+            <CardDescription>{getOrderDetail()}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center text-sm text-muted-foreground">
@@ -138,5 +161,3 @@ export default function OrderDetailScreen({ order, onClose, onMarkAsCharged, onU
     </div>
   );
 }
-
-    

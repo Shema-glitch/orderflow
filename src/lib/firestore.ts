@@ -63,12 +63,6 @@ export const createShift = async (userId: string): Promise<Shift> => {
         throw new Error("User ID is required to create a shift.");
     }
 
-    const existingShift = await getCurrentShift(userId);
-    if (existingShift) {
-        console.warn("User already has an open shift.");
-        return existingShift;
-    }
-
     const newShiftData = {
         userId,
         isOpen: true,

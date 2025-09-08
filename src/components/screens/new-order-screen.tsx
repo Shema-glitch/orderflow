@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Save, ShoppingBasket, User, MessageSquare, ChevronLeft } from 'lucide-react';
+import { Save, ShoppingBasket, User, MessageSquare, ChevronLeft, Minus, Plus } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface NewOrderScreenProps {
   menu: Menu;
-  onSaveOrder: (order: Omit<Order, 'id' | 'timestamp' | 'charged' | 'userId'>) => Promise<boolean>;
+  onSaveOrder: (order: Omit<Order, 'id' | 'timestamp' | 'charged' | 'userId' | 'shiftId'>) => Promise<boolean>;
   editingOrder: Order | null;
 }
 
@@ -23,6 +23,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
   const [selections, setSelections] = useState<OrderItemSelection>({});
   const [customerName, setCustomerName] = useState('');
   const [notes, setNotes] = useState('');
+  const [quantity, setQuantity] = useState(1);
   const [nameError, setNameError] = useState(false);
 
 
@@ -33,6 +34,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
       setSelections(editingOrder.items.selections || {});
       setCustomerName(editingOrder.customerName || '');
       setNotes(editingOrder.notes || '');
+      setQuantity(editingOrder.quantity || 1);
     } else {
       // Reset state when not editing
       if (!editingOrder) {
@@ -50,6 +52,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
         return acc;
     }, {} as OrderItemSelection);
     setSelections(initialSelections);
+    setQuantity(1);
   };
 
   const handleItemSelect = (subcategoryName: string, item: string) => {
@@ -67,6 +70,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
       const success = await onSaveOrder({
         customerName,
         notes,
+        quantity,
         items: {
             category: selectedCategory.name,
             selections: selections,
@@ -87,6 +91,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
     setSelections({});
     setCustomerName('');
     setNotes('');
+    setQuantity(1);
     setNameError(false);
   };
 
@@ -103,6 +108,10 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
       return selections['Toppings'].length;
     }
     return 0;
+  }
+
+  const handleQuantityChange = (amount: number) => {
+    setQuantity(prev => Math.max(1, prev + amount));
   }
 
   return (
@@ -132,16 +141,31 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
                 </div>
             </header>
             <div className="space-y-6">
-                <div className="space-y-2">
-                    <Label htmlFor="customerName" className="flex items-center text-base"><User className="mr-2 h-4 w-4"/>Customer Name</Label>
-                    <Input 
-                        id="customerName" 
-                        value={customerName} 
-                        onChange={(e) => setCustomerName(e.target.value)} 
-                        placeholder="e.g., Aline N."
-                        className={cn(nameError && 'animate-shake border-destructive focus-visible:ring-destructive')}
-                    />
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="customerName" className="flex items-center text-base"><User className="mr-2 h-4 w-4"/>Customer Name</Label>
+                        <Input 
+                            id="customerName" 
+                            value={customerName} 
+                            onChange={(e) => setCustomerName(e.target.value)} 
+                            placeholder="e.g., Aline N."
+                            className={cn(nameError && 'animate-shake border-destructive focus-visible:ring-destructive')}
+                        />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="quantity" className="flex items-center text-base">Quantity</Label>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="icon" onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1}>
+                                <Minus className="h-4 w-4"/>
+                            </Button>
+                            <span className="font-bold text-lg w-10 text-center">{quantity}</span>
+                             <Button variant="outline" size="icon" onClick={() => handleQuantityChange(1)}>
+                                <Plus className="h-4 w-4"/>
+                            </Button>
+                        </div>
+                    </div>
                 </div>
+
                 {selectedCategory.subcategories.map(sub => {
                     const isToppings = selectedCategory.name === 'Protein Shake' && sub.name === 'Toppings';
                     const toppingsCount = isToppings ? getToppingsCount() : 0;

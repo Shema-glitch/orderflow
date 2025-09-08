@@ -16,6 +16,7 @@ export interface Order {
   timestamp: Timestamp;
   charged: boolean;
   items: OrderItem;
+  quantity: number;
   customerName: string;
   notes?: string;
 }

@@ -141,8 +141,8 @@ export default function Home() {
     }
   
     return () => {
-      ordersUnsubscribe?.();
-      salesUnsubscribe?.();
+      if(ordersUnsubscribe) ordersUnsubscribe();
+      if(salesUnsubscribe) salesUnsubscribe();
     };
   }, [user, authLoading, toast]);
 
@@ -244,6 +244,7 @@ export default function Home() {
         });
       } else {
         const newOrder = await addOrder(shift.id, user.uid, orderData);
+        // The listener will automatically update the state, but this adds it immediately for better UX
         setOrders(prev => [newOrder, ...prev]);
         toast({
           title: "Order Saved!",
@@ -268,6 +269,7 @@ export default function Home() {
     if (!shift || !user || !shift.id) return;
     try {
         const newSale = await addSale(shift.id, user.uid, sale);
+        // The listener will automatically update the state, but this adds it immediately for better UX
         setSales(prev => [newSale, ...prev]);
         toast({
             title: "Sale Logged",
