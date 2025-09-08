@@ -3,6 +3,7 @@ import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { PT_Sans } from 'next/font/google'
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const ptSans = PT_Sans({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-sans' })
 
@@ -40,6 +41,7 @@ export default function RootLayout({
       <body className="font-sans antialiased overflow-hidden">
         {children}
         <Toaster />
+        <SpeedInsights />
       </body>
     </html>
   );
