@@ -11,10 +11,18 @@ export const metadata: Metadata = {
   title: 'OrderFlow Lite',
   description: 'A modern, minimal order-taking app for shift-based environments.',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icons/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'OrderFlow Lite',
+    startupImage: [
+      { url: '/splash-dark.png', media: '(prefers-color-scheme: dark)' },
+      { url: '/splash-light.png', media: '(prefers-color-scheme: light)' },
+    ],
   },
 };
 
@@ -33,10 +41,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={ptSans.variable} suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#F0F0F0" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#F9FAFB" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#18181b" media="(prefers-color-scheme: dark)" />
-        <link rel="apple-touch-startup-image" href="/splash-light.png" media="(prefers-color-scheme: light)" />
-        <link rel="apple-touch-startup-image" href="/splash-dark.png" media="(prefers-color-scheme: dark)" />
       </head>
       <body className="font-sans antialiased overflow-hidden">
         {children}
