@@ -4,7 +4,7 @@
 import type { Order } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { X, Clock, ShoppingBasket, MessageSquare, Edit, Trash2, Circle, RefreshCw, AlertTriangle } from 'lucide-react';
+import { X, Clock, ShoppingBasket, MessageSquare, Edit, Trash2, Circle, RefreshCw, AlertTriangle, Copy } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -26,9 +26,10 @@ interface OrderDetailScreenProps {
   onUnchargeOrder: (orderId: string) => void;
   onDeleteOrder: (orderId: string) => void;
   onEditOrder: (order: Order) => void;
+  onDuplicateOrder: (order: Order) => void;
 }
 
-export default function OrderDetailScreen({ order, onClose, onMarkAsCharged, onUnchargeOrder, onDeleteOrder, onEditOrder }: OrderDetailScreenProps) {
+export default function OrderDetailScreen({ order, onClose, onMarkAsCharged, onUnchargeOrder, onDeleteOrder, onEditOrder, onDuplicateOrder }: OrderDetailScreenProps) {
   const formattedTime = order.timestamp ? new Date(order.timestamp.toDate()).toLocaleString(undefined, {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -111,7 +112,7 @@ export default function OrderDetailScreen({ order, onClose, onMarkAsCharged, onU
           </CardContent>
         </Card>
       </ScrollArea>
-      <footer className="mt-4 grid grid-cols-2 gap-4">
+      <footer className="mt-4 grid grid-cols-3 gap-2">
          <AlertDialog>
             <AlertDialogTrigger asChild>
                 <Button variant="outline" className="text-destructive focus:text-destructive">
@@ -129,6 +130,10 @@ export default function OrderDetailScreen({ order, onClose, onMarkAsCharged, onU
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
+        <Button variant="outline" onClick={() => onDuplicateOrder(order)}>
+            <Copy className="mr-2 h-4 w-4"/>
+            Duplicate
+        </Button>
         <Button onClick={() => onEditOrder(order)}>
           <Edit className="mr-2 h-4 w-4" /> Edit
         </Button>

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import type { Menu, MenuCategory, OrderItemSelection, Order, Sale, MembershipType } from '@/lib/types';
+import type { Menu, MenuCategory, OrderItemSelection, Order } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +28,16 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
 
 
   useEffect(() => {
+    // If it's a duplicate order (id is cleared), keep customer name but reset selections
+    if (editingOrder && !editingOrder.id) {
+       setSelectedCategory(null);
+       setSelections({});
+       setCustomerName(editingOrder.customerName);
+       setNotes('');
+       setQuantity(1);
+       return;
+    }
+    
     if (editingOrder && menu.categories) {
       const category = menu.categories.find(c => c.name === editingOrder.items.category) || null;
       setSelectedCategory(category);
@@ -80,8 +90,6 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
       if (!success && !customerName) {
         setNameError(true);
         setTimeout(() => setNameError(false), 500); // Remove animation class
-      } else if (success) {
-        handleBack();
       }
     }
   };
@@ -117,18 +125,31 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
   return (
     <ScrollArea className="h-full">
         {!selectedCategory ? (
-        <div className="grid grid-cols-1 gap-4">
-            {menu.categories.map(category => (
-            <Button
-                key={category.id}
-                onClick={() => handleSelectCategory(category)}
-                className="h-28 text-xl justify-start p-6 rounded-lg shadow-sm"
-                variant="outline"
-            >
-                <ShoppingBasket className="mr-4 h-8 w-8 text-primary"/>
-                {category.name}
-            </Button>
-            ))}
+        <div className="space-y-6">
+             <div className="space-y-2">
+                <Label htmlFor="customerName" className="flex items-center text-base"><User className="mr-2 h-4 w-4"/>Customer Name</Label>
+                <Input 
+                    id="customerName" 
+                    value={customerName} 
+                    onChange={(e) => setCustomerName(e.target.value)} 
+                    placeholder="e.g., Aline N."
+                    className={cn(nameError && 'animate-shake border-destructive focus-visible:ring-destructive')}
+                    disabled={!!(editingOrder && !editingOrder.id)}
+                />
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+                {menu.categories.map(category => (
+                <Button
+                    key={category.id}
+                    onClick={() => handleSelectCategory(category)}
+                    className="h-28 text-xl justify-start p-6 rounded-lg shadow-sm"
+                    variant="outline"
+                >
+                    <ShoppingBasket className="mr-4 h-8 w-8 text-primary"/>
+                    {category.name}
+                </Button>
+                ))}
+            </div>
         </div>
         ) : (
             <div className="w-full">
@@ -150,6 +171,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
                             onChange={(e) => setCustomerName(e.target.value)} 
                             placeholder="e.g., Aline N."
                             className={cn(nameError && 'animate-shake border-destructive focus-visible:ring-destructive')}
+                            disabled={!!(editingOrder && !editingOrder.id)}
                         />
                     </div>
                      <div className="space-y-2">
@@ -199,7 +221,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
                 </div>
                 <Button size="lg" onClick={handleSaveOrderClick} className="w-full text-lg py-6 rounded-full shadow-lg">
                     <Save className="mr-2 h-5 w-5" />
-                    {editingOrder ? 'Update Order' : 'Save Order'}
+                    {editingOrder && editingOrder.id ? 'Update Order' : 'Save Order'}
                 </Button>
             </div>
         </div>

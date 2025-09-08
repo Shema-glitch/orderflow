@@ -243,9 +243,7 @@ export default function Home() {
           description: `Changes to ${orderData.customerName}'s order have been saved.`,
         });
       } else {
-        const newOrder = await addOrder(shift.id, user.uid, orderData);
-        // The listener will automatically update the state, but this adds it immediately for better UX
-        setOrders(prev => [newOrder, ...prev]);
+        await addOrder(shift.id, user.uid, orderData);
         toast({
           title: "Order Saved!",
           description: `Don't forget to mark it as 'Charged' once payment is received.`,
@@ -268,9 +266,7 @@ export default function Home() {
   const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp' | 'shiftId' | 'charged' | 'userId'>) => {
     if (!shift || !user || !shift.id) return;
     try {
-        const newSale = await addSale(shift.id, user.uid, sale);
-        // The listener will automatically update the state, but this adds it immediately for better UX
-        setSales(prev => [newSale, ...prev]);
+        await addSale(shift.id, user.uid, sale);
         toast({
             title: "Sale Logged",
             description: `${sale.type === 'Membership' ? sale.customerName : sale.name} sale logged.`
@@ -320,6 +316,12 @@ export default function Home() {
     setViewingOrder(null);
     setShowNewEntry(true);
   };
+  
+  const handleDuplicateOrder = (order: Order) => {
+    setEditingOrder({ ...order, id: '' }); // Clear id to make it a new order
+    setViewingOrder(null);
+    setShowNewEntry(true);
+  }
 
   const handleMarkOrderAsCharged = async (orderId: string) => {
     if (!shift || !shift.id) return;
@@ -413,7 +415,7 @@ export default function Home() {
     return (
       <div className="fixed inset-0 bg-background z-[100] p-4 flex flex-col">
         <header className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-primary">{editingOrder ? 'Edit Order' : 'New Order'}</h1>
+          <h1 className="text-2xl font-bold text-primary">{editingOrder && editingOrder.id ? 'Edit Order' : 'New Order'}</h1>
           <Button variant="ghost" size="icon" onClick={closeNewEntryScreen}>
             <X className="h-6 w-6"/>
           </Button>
@@ -433,6 +435,7 @@ export default function Home() {
         onUnchargeOrder={handleUnchargeOrder}
         onDeleteOrder={handleDeleteOrder}
         onEditOrder={handleEditOrder}
+        onDuplicateOrder={handleDuplicateOrder}
       />
     );
   };
@@ -493,7 +496,10 @@ export default function Home() {
           <Button
             size="lg"
             className="fixed bottom-24 right-6 h-16 w-16 rounded-full shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground z-50"
-            onClick={() => setShowNewEntry(true)}
+            onClick={() => {
+              setEditingOrder(null);
+              setShowNewEntry(true);
+            }}
             aria-label="Create New Order"
           >
             <Plus className="h-8 w-8" />

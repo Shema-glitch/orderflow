@@ -6,7 +6,7 @@ import type { Order } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CheckCircle2, Circle, ShoppingBasket, MessageSquare, Trash2, Edit, MoreVertical, AlertTriangle, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Circle, Trash2, Edit, MoreVertical, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -84,12 +84,14 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
       <CardContent className="p-4">
         <div className="flex items-start justify-between space-x-4">
           <div className="flex items-center space-x-4 flex-1">
-            <Avatar className="h-12 w-12 text-lg">
-               {order.quantity > 1 && (
+            <div className="relative">
+              <Avatar className="h-12 w-12 text-lg">
+                <AvatarFallback className="bg-primary/10 text-primary font-bold">{initials}</AvatarFallback>
+              </Avatar>
+              {order.quantity > 1 && (
                   <Badge variant="default" className="absolute -top-1 -right-2 z-10 rounded-full h-6 w-6 flex items-center justify-center text-sm">{order.quantity}</Badge>
               )}
-              <AvatarFallback className="bg-primary/10 text-primary font-bold">{initials}</AvatarFallback>
-            </Avatar>
+            </div>
             <div className="flex-1">
               <div className="flex justify-between items-start">
                 <div>
