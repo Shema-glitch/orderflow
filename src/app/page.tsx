@@ -154,10 +154,29 @@ export default function Home() {
   const handleOpenShift = async () => {
     if (!user) return;
     
+    let ordersUnsubscribe: (() => void) | null = null;
+    let salesUnsubscribe: (() => void) | null = null;
+
     setIsShiftLoading(true);
     try {
         const newShift = await createShift(user.uid);
-        setShift(newShift); // This state update will be picked up by the main useEffect
+        setShift(newShift); 
+        
+        if (newShift?.id) {
+          setOrdersLoading(true);
+          setSalesLoading(true);
+          
+          ordersUnsubscribe = listenToOrders(newShift.id, (loadedOrders) => {
+            setOrders(loadedOrders);
+            setOrdersLoading(false);
+          });
+          
+          salesUnsubscribe = listenToSales(newShift.id, (loadedSales) => {
+            setSales(loadedSales);
+            setSalesLoading(false);
+          });
+        }
+        
         setView('orders_list');
     } catch(error) {
         console.error("Error opening shift:", error);
@@ -317,8 +336,31 @@ export default function Home() {
     setShowNewEntry(true);
   };
   
+  const getOrderDetailString = (order: Order) => {
+    const { category, selections } = order.items;
+    let detail = category;
+
+    if (category === 'Coffee' || category === 'Tea') {
+      const type = selections['Type']?.[0];
+      if (type) detail = `${type} ${category}`;
+    } else if (category === 'Protein Shake') {
+      const flavor = selections['Flavour']?.[0];
+      if (flavor) detail = `${flavor} Shake`;
+    } else if (category === 'Build Your Own Sandwich') {
+        const protein = selections['Protein']?.[0];
+        if (protein) detail = `${protein} Sandwich`;
+    } else {
+        const type = selections['Type']?.[0];
+        if (type) detail = `${category} - ${type}`;
+    }
+    return detail;
+  }
+
   const handleDuplicateOrder = (order: Order) => {
-    setEditingOrder({ ...order, id: '' }); // Clear id to make it a new order
+    const originalItemDescription = getOrderDetailString(order);
+    const newNote = `Part of a multi-item order.\nOriginal item: ${originalItemDescription}.`;
+
+    setEditingOrder({ ...order, id: '', notes: newNote }); 
     setViewingOrder(null);
     setShowNewEntry(true);
   }

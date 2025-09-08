@@ -28,12 +28,12 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
 
 
   useEffect(() => {
-    // If it's a duplicate order (id is cleared), keep customer name but reset selections
+    // If it's a duplicate order (id is cleared), pre-fill data but reset selections
     if (editingOrder && !editingOrder.id) {
        setSelectedCategory(null);
        setSelections({});
        setCustomerName(editingOrder.customerName);
-       setNotes('');
+       setNotes(editingOrder.notes || '');
        setQuantity(1);
        return;
     }
@@ -183,8 +183,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
                             <span className="font-bold text-lg w-10 text-center">{quantity}</span>
                              <Button variant="outline" size="icon" onClick={() => handleQuantityChange(1)}>
                                 <Plus className="h-4 w-4"/>
-                            </Button>
-                        </div>
+                            </Button>                        </div>
                     </div>
                 </div>
 
@@ -216,7 +215,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
                     )
                 })}
                 <div className="space-y-2">
-                    <Label htmlFor="notes" className="flex items-center text-base"><MessageSquare className="mr-2 h-4 w-4"/>Custom Notes (Optional)</Label>
+                    <Label htmlFor="notes" className="flex items-center text-base"><MessageSquare className="mr-2 h-4 w-4"/>Custom Notes</Label>
                     <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g., No banana, extra whey" />
                 </div>
                 <Button size="lg" onClick={handleSaveOrderClick} className="w-full text-lg py-6 rounded-full shadow-lg">
@@ -229,3 +228,5 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
     </ScrollArea>
   );
 }
+
+    
