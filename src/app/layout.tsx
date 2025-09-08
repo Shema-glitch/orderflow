@@ -1,5 +1,5 @@
 
-import type {Metadata} from 'next';
+import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 import { PT_Sans } from 'next/font/google'
@@ -9,7 +9,6 @@ const ptSans = PT_Sans({ subsets: ['latin'], weight: ['400', '700'], variable: '
 export const metadata: Metadata = {
   title: 'OrderFlow Lite',
   description: 'A modern, minimal order-taking app for shift-based environments.',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -17,6 +16,13 @@ export const metadata: Metadata = {
     title: 'OrderFlow Lite',
   },
 };
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+}
 
 export default function RootLayout({
   children,
