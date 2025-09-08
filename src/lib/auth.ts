@@ -18,9 +18,6 @@ import {
 
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-provider.setCustomParameters({
-  'auth_domain': 'orderflow-lite-cp5g0.firebaseapp.com'
-});
 
 
 export function useAuth() {

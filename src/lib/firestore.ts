@@ -65,6 +65,7 @@ export const createShift = async (userId: string): Promise<Shift> => {
 
     const existingShift = await getCurrentShift(userId);
     if (existingShift) {
+        console.warn("User already has an open shift.");
         return existingShift;
     }
 
@@ -109,10 +110,18 @@ export const listenToOrders = (shiftId: string, callback: (orders: Order[]) => v
   return unsubscribe;
 };
 
-export const addOrder = async (shiftId: string, userId: string, orderData: Omit<Order, 'id' | 'shiftId' | 'userId'>) => {
-  if (!shiftId || !userId) return;
+export const addOrder = async (shiftId: string, userId: string, orderData: Omit<Order, 'id' | 'shiftId' | 'userId' | 'charged' | 'timestamp'>) => {
+  if (!shiftId || !userId) {
+    throw new Error("Invalid shift or user ID");
+  };
   const ordersCollection = collection(db, 'shifts', shiftId, 'orders');
-  await addDoc(ordersCollection, {...orderData, userId, charged: false, timestamp: serverTimestamp()});
+  const newOrderData = {...orderData, userId, charged: false, timestamp: serverTimestamp()};
+  const docRef = await addDoc(ordersCollection, newOrderData);
+  return {
+    ...newOrderData,
+    id: docRef.id,
+    timestamp: Timestamp.now() // Return a client-side timestamp for immediate UI update
+  } as Order;
 };
 
 export const updateOrder = async (shiftId: string, orderId: string, updates: Partial<Omit<Order, 'id' | 'shiftId'>>) => {
@@ -143,10 +152,18 @@ export const listenToSales = (shiftId: string, callback: (sales: Sale[]) => void
   return unsubscribe;
 };
 
-export const addSale = async (shiftId: string, userId: string, saleData: Omit<Sale, 'id' | 'shiftId' | 'userId'>) => {
-  if (!shiftId || !userId) return;
+export const addSale = async (shiftId: string, userId: string, saleData: Omit<Sale, 'id' | 'shiftId' | 'userId' | 'charged' | 'timestamp'>): Promise<Sale> => {
+  if (!shiftId || !userId) {
+    throw new Error("Invalid shift or user ID");
+  }
   const salesCollection = collection(db, 'shifts', shiftId, 'sales');
-  await addDoc(salesCollection, {...saleData, userId, charged: false, timestamp: serverTimestamp()});
+  const newSaleData = {...saleData, userId, charged: false, timestamp: serverTimestamp()};
+  const docRef = await addDoc(salesCollection, newSaleData);
+  return {
+    ...newSaleData,
+    id: docRef.id,
+    timestamp: Timestamp.now() // Return a client-side timestamp for immediate UI update
+  } as Sale;
 };
 
 export const updateSale = async (shiftId: string, saleId: string, updates: Partial<Omit<Sale, 'id' | 'shiftId'>>) => {
@@ -160,5 +177,3 @@ export const deleteSale = async (shiftId: string, saleId: string) => {
   const saleRef = doc(db, 'shifts', shiftId, 'sales', saleId);
   await deleteDoc(saleRef);
 };
-
-    

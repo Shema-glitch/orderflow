@@ -53,21 +53,24 @@ export default function Home() {
     }
 
     if (typeof window !== 'undefined') {
+        setIsOnline(window.navigator.onLine);
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
-        setIsOnline(window.navigator.onLine);
     }
     
     return () => {
+      if (typeof window !== 'undefined') {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
+      }
     };
   }, []);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    setTheme(savedTheme);
+    const savedTheme = typeof window !== 'undefined' ? localStorage.getItem('theme') : 'light';
+    setTheme(savedTheme || 'light');
   }, []);
+
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -75,7 +78,9 @@ export default function Home() {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem('theme', theme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('theme', theme);
+    }
   }, [theme]);
 
   // This is the main setup effect. It runs when auth state is confirmed.
@@ -238,7 +243,8 @@ export default function Home() {
           description: `Changes to ${orderData.customerName}'s order have been saved.`,
         });
       } else {
-        await addOrder(shift.id, user.uid, orderData);
+        const newOrder = await addOrder(shift.id, user.uid, orderData);
+        setOrders(prev => [newOrder, ...prev]);
         toast({
           title: "Order Saved!",
           description: `Don't forget to mark it as 'Charged' once payment is received.`,
@@ -261,7 +267,8 @@ export default function Home() {
   const handleSaveSale = async (sale: Omit<Sale, 'id' | 'timestamp' | 'shiftId' | 'charged' | 'userId'>) => {
     if (!shift || !user || !shift.id) return;
     try {
-        await addSale(shift.id, user.uid, sale);
+        const newSale = await addSale(shift.id, user.uid, sale);
+        setSales(prev => [newSale, ...prev]);
         toast({
             title: "Sale Logged",
             description: `${sale.type === 'Membership' ? sale.customerName : sale.name} sale logged.`
@@ -526,5 +533,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
