@@ -38,7 +38,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
        return;
     }
     
-    if (editingOrder && menu.categories) {
+    if (editingOrder && editingOrder.id && menu.categories) {
       const category = menu.categories.find(c => c.name === editingOrder.items.category) || null;
       setSelectedCategory(category);
       setSelections(editingOrder.items.selections || {});
@@ -46,7 +46,7 @@ export default function NewOrderScreen({ menu, onSaveOrder, editingOrder }: NewO
       setNotes(editingOrder.notes || '');
       setQuantity(editingOrder.quantity || 1);
     } else {
-      // Reset state when not editing
+      // Reset state when not editing or when starting fresh
       if (!editingOrder) {
         handleBack();
       }
