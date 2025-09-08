@@ -19,6 +19,7 @@ export interface Order {
   quantity: number;
   customerName: string;
   notes?: string;
+  isContinuation?: boolean;
 }
 
 export interface Subcategory {

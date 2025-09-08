@@ -6,7 +6,7 @@ import type { Order } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CheckCircle2, Circle, Trash2, Edit, MoreVertical, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Circle, Trash2, Edit, MoreVertical, RefreshCw, Link } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -98,7 +98,10 @@ export default function OrderCard({ order, onMarkAsCharged, onUnchargeOrder, onD
                   <h3 className="font-bold text-lg text-foreground">
                     {order.customerName}
                   </h3>
-                  <p className="text-sm text-muted-foreground -mt-1">{orderDetail}</p>
+                  <p className="text-sm text-muted-foreground -mt-1 flex items-center gap-1">
+                     {order.isContinuation && <Link className="h-3 w-3 text-muted-foreground" />}
+                    <span>{orderDetail}</span>
+                  </p>
                 </div>
                  <div className="text-right pl-2">
                     <p className="text-xs text-muted-foreground font-mono">

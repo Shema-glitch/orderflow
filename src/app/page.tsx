@@ -360,10 +360,19 @@ export default function Home() {
     const originalItemDescription = getOrderDetailString(order);
     const newNote = `Part of a multi-item order.\nOriginal item: ${originalItemDescription}.`;
 
-    setEditingOrder({ ...order, id: '', notes: newNote }); 
+    // Create a new order object for duplication, clearing the ID and setting the note and continuation flag.
+    const newOrder: Omit<Order, 'id' | 'timestamp' | 'shiftId' | 'charged'> & { id: string } = {
+        ...order, 
+        id: '', // Clear the ID to signify a new order
+        notes: newNote,
+        isContinuation: true, // Set our new flag
+    };
+
+    setEditingOrder(newOrder); 
     setViewingOrder(null);
     setShowNewEntry(true);
   }
+
 
   const handleMarkOrderAsCharged = async (orderId: string) => {
     if (!shift || !shift.id) return;
@@ -583,5 +592,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
