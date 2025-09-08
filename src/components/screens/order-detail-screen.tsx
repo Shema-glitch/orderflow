@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { X, Clock, ShoppingBasket, MessageSquare, Edit, Trash2, Circle, RefreshCw, AlertTriangle, Copy } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,6 +61,37 @@ export default function OrderDetailScreen({ order, onClose, onMarkAsCharged, onU
     
     return detail;
   };
+  
+  const renderOrderInstance = (index: number) => (
+    <div key={index}>
+       {index > 0 && <Separator className="my-4" />}
+       <div className="space-y-3">
+          <h4 className="font-semibold flex items-center"><ShoppingBasket className="mr-2 h-4 w-4"/>Selections</h4>
+          {Object.entries(order.items.selections).map(([subcategory, items]) => (
+            Array.isArray(items) && items.length > 0 && (
+              <div key={subcategory} className="pl-6">
+                <p className="font-medium text-foreground">{subcategory}</p>
+                <p className="text-muted-foreground">{items.join(', ')}</p>
+              </div>
+            )
+          ))}
+        </div>
+
+        {order.notes && (
+          <div className="space-y-2 mt-3">
+            <h4 className="font-semibold flex items-center"><MessageSquare className="mr-2 h-4 w-4"/>Notes</h4>
+            <p className="pl-6 text-muted-foreground italic">"{order.notes}"</p>
+          </div>
+        )}
+        
+        {hasExtraToppings && (
+            <Badge variant="destructive" className="flex items-center gap-1 w-fit mt-3">
+                <AlertTriangle className="h-3 w-3" />
+                Additional Cost
+            </Badge>
+        )}
+    </div>
+  )
 
   const orderTitle = `${order.quantity > 1 ? `${order.quantity}x ` : ''}${order.customerName}`;
 
@@ -82,32 +114,8 @@ export default function OrderDetailScreen({ order, onClose, onMarkAsCharged, onU
               <Clock className="mr-2 h-4 w-4" />
               <span>{formattedTime}</span>
             </div>
-
-            <div className="space-y-3">
-              <h4 className="font-semibold flex items-center"><ShoppingBasket className="mr-2 h-4 w-4"/>Selections</h4>
-              {Object.entries(order.items.selections).map(([subcategory, items]) => (
-                Array.isArray(items) && items.length > 0 && (
-                  <div key={subcategory} className="pl-6">
-                    <p className="font-medium text-foreground">{subcategory}</p>
-                    <p className="text-muted-foreground">{items.join(', ')}</p>
-                  </div>
-                )
-              ))}
-            </div>
-
-            {order.notes && (
-              <div className="space-y-2">
-                <h4 className="font-semibold flex items-center"><MessageSquare className="mr-2 h-4 w-4"/>Notes</h4>
-                <p className="pl-6 text-muted-foreground italic">"{order.notes}"</p>
-              </div>
-            )}
             
-            {hasExtraToppings && (
-                <Badge variant="destructive" className="flex items-center gap-1 w-fit">
-                    <AlertTriangle className="h-3 w-3" />
-                    Additional Cost
-                </Badge>
-            )}
+            {[...Array(order.quantity)].map((_, i) => renderOrderInstance(i))}
 
           </CardContent>
         </Card>
@@ -166,3 +174,5 @@ export default function OrderDetailScreen({ order, onClose, onMarkAsCharged, onU
     </div>
   );
 }
+
+    
