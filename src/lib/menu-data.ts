@@ -28,29 +28,29 @@ export const menu: Menu = {
       name: 'Build Your Own Sandwich',
       subcategories: [
         { 
-          id: 'bread', 
-          name: 'Bread Type', 
-          items: ['White', 'Wheat', 'Sourdough', 'Rye', 'Ciabatta'] 
+          id: 'carb', 
+          name: 'Carb', 
+          items: ['Brown Bread', 'Wholewheat Bagel', 'Brown Focaccia'] 
         },
         { 
-          id: 'fillings', 
-          name: 'Protein Fillings', 
-          items: ['Turkey', 'Ham', 'Roast Beef', 'Grilled Chicken', 'Tuna Salad'] 
+          id: 'protein', 
+          name: 'Protein', 
+          items: ['Roast Chicken', 'Roast Beef', 'Tofu', 'Egg', 'Tuna (+2K)', 'Smoked Salmon (+5K)']
+        },
+        {
+          id: 'fat',
+          name: 'Fat',
+          items: ['Guacamole', 'Hummus', 'Goat Cheese', 'Feta Cheese', 'Cream Cheese']
+        },
+        {
+          id: 'fiber',
+          name: 'Fiber',
+          items: ['Grilled Veggies', 'Lettuce & Tomato', 'Wilted Spinach', 'Grilled Mushrooms', 'Roast Beetroot']
         },
         { 
-          id: 'cheese', 
-          name: 'Cheese', 
-          items: ['Cheddar', 'Swiss', 'Provolone', 'American', 'Pepper Jack'] 
-        },
-        { 
-          id: 'veggies', 
-          name: 'Veggies', 
-          items: ['Lettuce', 'Tomato', 'Onion', 'Pickles', 'Cucumbers', 'Bell Peppers'] 
-        },
-        { 
-          id: 'sauces', 
-          name: 'Sauces', 
-          items: ['Mayonnaise', 'Mustard', 'Ranch', 'BBQ Sauce', 'Vinaigrette'] 
+          id: 'sauce', 
+          name: 'Sauce', 
+          items: ['Basil & Pecorino Pesto', 'Chimichuri', 'Lemon Tahini', 'Fresh Tomato & Herbs Spread', 'Cilantro Yogonnaise'] 
         },
       ],
     },
