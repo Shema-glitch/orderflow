@@ -24,6 +24,7 @@ import { createShift, closeShift, listenToOrders, addOrder, updateOrder, deleteO
 import { Badge } from '@/components/ui/badge';
 import isEqual from 'lodash.isequal';
 
+export const dynamic = 'force-dynamic';
 
 export default function Home() {
   const { toast } = useToast();
@@ -592,3 +593,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
