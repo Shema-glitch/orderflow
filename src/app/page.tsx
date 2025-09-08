@@ -44,6 +44,23 @@ export default function Home() {
   const [isOnline, setIsOnline] = useState(true);
   const [isOfflineDialogOpen, setIsOfflineDialogOpen] = useState(false);
   const [isShiftLoading, setIsShiftLoading] = useState(true);
+
+  const vibrate = (pattern: number | number[]) => {
+    if (navigator.vibrate) {
+      navigator.vibrate(pattern);
+    }
+  };
+
+  useEffect(() => {
+    const unchargedCount = orders.filter(o => !o.charged).length;
+    if (!shift || authLoading || isShiftLoading) {
+      document.title = 'OrderFlow Lite';
+    } else if (unchargedCount > 0) {
+      document.title = `(${unchargedCount}) Uncharged - OrderFlow Lite`;
+    } else {
+      document.title = '✅ All Caught Up - OrderFlow Lite';
+    }
+  }, [orders, shift, authLoading, isShiftLoading]);
   
 
   useEffect(() => {
@@ -116,6 +133,7 @@ export default function Home() {
         }
       } catch (error) {
         console.error("Error setting up application:", error);
+        vibrate([100, 50, 100]);
         toast({
             variant: "destructive",
             title: "Application Error",
@@ -179,8 +197,10 @@ export default function Home() {
         }
         
         setView('orders_list');
+        vibrate(100);
     } catch(error) {
         console.error("Error opening shift:", error);
+        vibrate([100, 50, 100]);
         toast({
             variant: "destructive",
             title: "Could Not Start Shift",
@@ -207,10 +227,12 @@ export default function Home() {
     setOrders([]);
     setSales([]);
     setView('shift_closed');
+    vibrate(100);
   };
 
   const handleSaveOrder = async (orderData: Omit<Order, 'id' | 'timestamp' | 'charged' | 'shiftId' | 'userId'>): Promise<boolean> => {
      if (!shift || !user || !shift.id) {
+        vibrate([100, 50, 100]);
         toast({
             variant: "destructive",
             title: "No Active Shift",
@@ -220,6 +242,7 @@ export default function Home() {
      }
 
      if (!orderData.customerName) {
+      vibrate([100, 50, 100]);
       toast({
         variant: "destructive",
         title: "Customer Name Required",
@@ -232,6 +255,7 @@ export default function Home() {
     );
 
     if (!orderData.items.category || !hasSelections) {
+      vibrate([100, 50, 100]);
       toast({
         variant: "destructive",
         title: "Cannot Save Empty Order",
@@ -246,6 +270,7 @@ export default function Home() {
         isEqual(order.items, orderData.items)
       );
       if (isDuplicate) {
+        vibrate([100, 50, 100]);
         toast({
           variant: "destructive",
           title: "Duplicate Order",
@@ -258,12 +283,14 @@ export default function Home() {
     try {
       if (editingOrder && editingOrder.id) {
         await updateOrder(shift.id, editingOrder.id, orderData);
+        vibrate(50);
         toast({
           title: "Order Updated!",
           description: `Changes to ${orderData.customerName}'s order have been saved.`,
         });
       } else {
         await addOrder(shift.id, user.uid, orderData);
+        vibrate(50);
         toast({
           title: "Order Saved!",
           description: `Don't forget to mark it as 'Charged' once payment is received.`,
@@ -273,6 +300,7 @@ export default function Home() {
       setEditingOrder(null);
       return true; 
     } catch (error) {
+       vibrate([100, 50, 100]);
        toast({
         variant: "destructive",
         title: "Save Failed",
@@ -287,11 +315,13 @@ export default function Home() {
     if (!shift || !user || !shift.id) return;
     try {
         await addSale(shift.id, user.uid, sale);
+        vibrate(50);
         toast({
             title: "Sale Logged",
             description: `${sale.type === 'Membership' ? sale.customerName : sale.name} sale logged.`
         });
     } catch (error) {
+        vibrate([100, 50, 100]);
         toast({
             variant: "destructive",
             title: "Log Sale Failed",
@@ -316,11 +346,13 @@ export default function Home() {
 
     try {
         await deleteSale(shift.id, saleId);
+        vibrate(50);
         toast({
             title: "Sale Deleted",
             description: `${saleToDelete.type === 'Membership' ? saleToDelete.customerName : saleToDelete.name} sale has been removed.`,
         });
     } catch (error) {
+        vibrate([100, 50, 100]);
         toast({
             variant: "destructive",
             title: "Delete Failed",
@@ -379,8 +411,10 @@ export default function Home() {
     if (!shift || !shift.id) return;
     try {
       await updateOrder(shift.id, orderId, { charged: true });
+      vibrate(50);
       setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: true } : prev);
     } catch (error) {
+      vibrate([100, 50, 100]);
       console.error("Error marking order as charged: ", error);
     }
   };
@@ -389,8 +423,10 @@ export default function Home() {
     if (!shift || !shift.id) return;
     try {
       await updateOrder(shift.id, orderId, { charged: false });
+      vibrate(50);
       setViewingOrder(prev => prev && prev.id === orderId ? { ...prev, charged: false } : prev);
     } catch (error) {
+       vibrate([100, 50, 100]);
        console.error("Error uncharging order: ", error);
     }
   };
@@ -399,12 +435,14 @@ export default function Home() {
     if (!shift || !shift.id) return;
     try {
       await deleteOrder(shift.id, orderId);
+      vibrate(50);
       setViewingOrder(null);
       toast({
         title: "Order Deleted",
         description: "The order has been removed from your list.",
       });
     } catch (error) {
+      vibrate([100, 50, 100]);
       toast({
         variant: "destructive",
         title: "Delete Failed",
@@ -418,7 +456,9 @@ export default function Home() {
     if (!shift || !shift.id) return;
     try {
         await updateSale(shift.id, saleId, { charged: true });
+        vibrate(50);
     } catch (error) {
+        vibrate([100, 50, 100]);
         console.error("Error marking sale as charged: ", error);
     }
   };
@@ -593,5 +633,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

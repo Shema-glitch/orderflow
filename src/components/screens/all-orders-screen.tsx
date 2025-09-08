@@ -4,7 +4,7 @@
 import type { Order } from '@/lib/types';
 import OrderCard from '@/components/order-card';
 import { ClipboardList } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import OrderCardSkeleton from '../order-card-skeleton';
 
 
@@ -23,7 +23,7 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
+      staggerChildren: 0.08,
     },
   },
 };
@@ -35,10 +35,15 @@ const itemVariants = {
     opacity: 1,
     transition: {
       type: "spring",
-      stiffness: 100,
+      stiffness: 120,
       damping: 14,
     },
   },
+  exit: {
+    opacity: 0,
+    scale: 0.9,
+    transition: { duration: 0.2 }
+  }
 };
 
 
@@ -67,11 +72,18 @@ export default function AllOrdersScreen({ orders, isLoading, onMarkAsCharged, on
           initial="hidden"
           animate="visible"
         >
-          {orders.map(order => (
-            <motion.div key={order.id} variants={itemVariants}>
-              <OrderCard order={order} onMarkAsCharged={onMarkAsCharged} onUnchargeOrder={onUnchargeOrder} onDeleteOrder={onDeleteOrder} onEditOrder={onEditOrder} onViewOrder={onViewOrder} />
-            </motion.div>
-          ))}
+          <AnimatePresence>
+            {orders.map(order => (
+              <motion.div 
+                key={order.id} 
+                variants={itemVariants}
+                exit="exit"
+                layout
+              >
+                <OrderCard order={order} onMarkAsCharged={onMarkAsCharged} onUnchargeOrder={onUnchargeOrder} onDeleteOrder={onDeleteOrder} onEditOrder={onEditOrder} onViewOrder={onViewOrder} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </motion.div>
       ) : (
         <div className="flex flex-col items-center justify-center h-[60vh] text-center text-muted-foreground border-2 border-dashed rounded-lg p-4 bg-card">

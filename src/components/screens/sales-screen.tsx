@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Package, Receipt, Droplet, User, Save, Dumbbell, CreditCard, Clock, ChevronDown, ClipboardList, Fuel, BarChart } from 'lucide-react';
 import SaleCard from '@/components/sale-card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import SaleCardSkeleton from '../sale-card-skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -41,7 +41,7 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
+      staggerChildren: 0.08,
     },
   },
 };
@@ -53,10 +53,15 @@ const itemVariants = {
     opacity: 1,
     transition: {
       type: "spring",
-      stiffness: 100,
+      stiffness: 120,
       damping: 14,
     },
   },
+  exit: {
+    opacity: 0,
+    scale: 0.9,
+    transition: { duration: 0.2 }
+  }
 };
 
 export default function SalesScreen({ sales, isLoading, onSaveSale, onMarkAsCharged, onEditSale, onDeleteSale }: SalesScreenProps) {
@@ -218,11 +223,18 @@ export default function SalesScreen({ sales, isLoading, onSaveSale, onMarkAsChar
             initial="hidden"
             animate="visible"
           >
-            {unchargedSales.map(sale => (
-                <motion.div key={sale.id} variants={itemVariants}>
-                    <SaleCard key={sale.id} sale={sale} onMarkAsCharged={onMarkAsCharged} onEdit={onEditSale} onDelete={onDeleteSale} />
-                </motion.div>
-            ))}
+            <AnimatePresence>
+              {unchargedSales.map(sale => (
+                  <motion.div 
+                    key={sale.id} 
+                    variants={itemVariants}
+                    exit="exit"
+                    layout
+                  >
+                      <SaleCard key={sale.id} sale={sale} onMarkAsCharged={onMarkAsCharged} onEdit={onEditSale} onDelete={onDeleteSale} />
+                  </motion.div>
+              ))}
+            </AnimatePresence>
           </motion.div>
         ) : (
           <div className="flex flex-col items-center justify-center h-[20vh] text-center text-muted-foreground border-2 border-dashed rounded-lg p-4 bg-card">
@@ -251,11 +263,18 @@ export default function SalesScreen({ sales, isLoading, onSaveSale, onMarkAsChar
             initial="hidden"
             animate="visible"
           >
-            {chargedSales.map(sale => (
-                <motion.div key={sale.id} variants={itemVariants}>
-                    <SaleCard key={sale.id} sale={sale} onMarkAsCharged={onMarkAsCharged} onEdit={onEditSale} onDelete={onDeleteSale} />
-                </motion.div>
-            ))}
+             <AnimatePresence>
+              {chargedSales.map(sale => (
+                  <motion.div 
+                    key={sale.id} 
+                    variants={itemVariants}
+                    exit="exit"
+                    layout
+                  >
+                      <SaleCard key={sale.id} sale={sale} onMarkAsCharged={onMarkAsCharged} onEdit={onEditSale} onDelete={onDeleteSale} />
+                  </motion.div>
+              ))}
+            </AnimatePresence>
           </motion.div>
         ) : (
            <div className="flex flex-col items-center justify-center h-[15vh] text-center text-muted-foreground border-2 border-dashed rounded-lg p-4 bg-card">
