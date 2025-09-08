@@ -220,7 +220,7 @@ export default function Home() {
       return false;
     }
 
-    if (!editingOrder) {
+    if (!editingOrder?.id) { // This logic handles new and duplicated orders
       const isDuplicate = orders.some(order => 
         order.customerName.trim().toLowerCase() === orderData.customerName.trim().toLowerCase() &&
         isEqual(order.items, orderData.items)
@@ -236,7 +236,7 @@ export default function Home() {
     }
 
     try {
-      if (editingOrder) {
+      if (editingOrder && editingOrder.id) {
         await updateOrder(shift.id, editingOrder.id, orderData);
         toast({
           title: "Order Updated!",
