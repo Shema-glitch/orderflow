@@ -61,6 +61,9 @@ export interface Sale {
   membershipType?: MembershipType;
   membershipDuration?: MembershipDuration;
   charged: boolean;
+  email?: string;
+  phone?: string;
+  gender?: 'Male' | 'Female' | 'Other';
 }
 
 export type AppView = 'loading' | 'shift_closed' | 'new_order' | 'orders_list' | 'all_orders' | 'sales' | 'shift_summary' | 'order_detail';
